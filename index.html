@@ -118,12 +118,30 @@
           <h2>🔥 Ofertas da Shopee</h2>
 
           <button
-            class="gold"
-            onclick="showPage('criar')">
-            + Adicionar manualmente
-          </button>
+  class="gold"
+  onclick="showPage('criar')">
+  + Adicionar manualmente
+</button>
 
-        </div>
+<div class="search-box">
+  <h3>🔎 Buscar ofertas na Shopee</h3>
+  <p class="muted">Digite o produto que você quer encontrar.</p>
+
+  <div class="search-row">
+    <input
+      id="searchShopee"
+      type="text"
+      placeholder="Ex.: fone, air fryer, tênis, mesa..."
+    >
+
+    <button
+      id="searchShopeeBtn"
+      class="primary"
+      onclick="buscarOfertasShopee()">
+      🔎 Buscar ofertas
+    </button>
+  </div>
+</div>
 
 
         <!-- BUSCA SHOPEE -->
