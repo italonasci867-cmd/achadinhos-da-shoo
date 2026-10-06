@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Achadinhos da Shoo</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Achadinhos da Shoo</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -22,13 +22,35 @@
     </div>
 
     <nav>
-      <button class="nav active" data-page="inicio">🏠 Início</button>
-      <button class="nav" data-page="ofertas">🔥 Ofertas</button>
-      <button class="nav" data-page="criar">✍️ Criar divulgação</button>
-      <button class="nav" data-page="fila">📤 Fila de publicação</button>
-      <button class="nav" data-page="historico">📊 Histórico</button>
-      <button class="nav" data-page="grupos">👥 Grupos</button>
-      <button class="nav" data-page="config">⚙️ Configurações</button>
+
+      <button class="nav active" data-page="inicio">
+        🏠 Início
+      </button>
+
+      <button class="nav" data-page="ofertas">
+        🔥 Ofertas
+      </button>
+
+      <button class="nav" data-page="criar">
+        ✍️ Criar divulgação
+      </button>
+
+      <button class="nav" data-page="fila">
+        📤 Fila de publicação
+      </button>
+
+      <button class="nav" data-page="historico">
+        📊 Histórico
+      </button>
+
+      <button class="nav" data-page="grupos">
+        👥 Grupos
+      </button>
+
+      <button class="nav" data-page="config">
+        ⚙️ Configurações
+      </button>
+
     </nav>
 
   </aside>
@@ -43,8 +65,13 @@
       </button>
 
       <div>
-        <h1 id="pageTitle">Início</h1>
-        <p>Seu painel automático de ofertas</p>
+        <h1 id="pageTitle">
+          Início
+        </h1>
+
+        <p>
+          Seu painel automático de ofertas
+        </p>
       </div>
 
     </header>
@@ -87,7 +114,9 @@
 
         <div class="panel-title">
 
-          <h2>🔥 Últimas ofertas</h2>
+          <h2>
+            🔥 Últimas ofertas
+          </h2>
 
           <button
             class="gold"
@@ -97,14 +126,15 @@
 
         </div>
 
-        <div id="recentOffers" class="empty">
+        <div
+          id="recentOffers"
+          class="empty">
           Nenhuma oferta cadastrada ainda.
         </div>
 
       </div>
 
     </section>
-
 
 
     <!-- OFERTAS -->
@@ -115,36 +145,49 @@
 
         <div class="panel-title">
 
-          <h2>🔥 Ofertas da Shopee</h2>
+          <h2>
+            🔥 Ofertas
+          </h2>
 
           <button
-  class="gold"
-  onclick="showPage('criar')">
-  + Adicionar manualmente
-</button>
+            class="gold"
+            onclick="showPage('criar')">
+            + Adicionar manualmente
+          </button>
 
-<div class="search-box">
-  <h3>🔎 Buscar ofertas na Shopee</h3>
-  <p class="muted">Digite o produto que você quer encontrar.</p>
-
-  <div class="search-row">
-    <input
-      id="searchShopee"
-      type="text"
-      placeholder="Ex.: fone, air fryer, tênis, mesa..."
-    >
-
-    <button
-      id="searchShopeeBtn"
-      class="primary"
-      onclick="buscarOfertasShopee()">
-      🔎 Buscar ofertas
-    </button>
-  </div>
-</div>
+        </div>
 
 
-        
+        <!-- BUSCA SHOPEE - APENAS UMA -->
+
+        <div class="search-box">
+
+          <h3>
+            🔎 Buscar ofertas na Shopee
+          </h3>
+
+          <p class="muted">
+            Digite o produto que você quer encontrar.
+          </p>
+
+          <div class="search-row">
+
+            <input
+              id="searchShopee"
+              type="text"
+              placeholder="Ex.: fone, air fryer, tênis, mesa..."
+            >
+
+            <button
+              id="searchShopeeBtn"
+              class="primary"
+              onclick="buscarOfertasShopee()">
+              🔎 Buscar ofertas
+            </button>
+
+          </div>
+
+        </div>
 
 
         <!-- RESULTADOS -->
@@ -159,14 +202,15 @@
     </section>
 
 
-
     <!-- CRIAR DIVULGAÇÃO -->
 
     <section id="criar" class="page">
 
       <div class="panel form-panel">
 
-        <h2>✍️ Criar divulgação</h2>
+        <h2>
+          ✍️ Criar divulgação
+        </h2>
 
         <p class="muted">
           O link do produto é obrigatório.
@@ -241,13 +285,33 @@
 
         <select id="category">
 
-          <option>Achadinhos</option>
-          <option>Casa</option>
-          <option>Eletrônicos</option>
-          <option>Moda</option>
-          <option>Beleza</option>
-          <option>Infantil</option>
-          <option>Automotivo</option>
+          <option>
+            Achadinhos
+          </option>
+
+          <option>
+            Casa
+          </option>
+
+          <option>
+            Eletrônicos
+          </option>
+
+          <option>
+            Moda
+          </option>
+
+          <option>
+            Beleza
+          </option>
+
+          <option>
+            Infantil
+          </option>
+
+          <option>
+            Automotivo
+          </option>
 
         </select>
 
@@ -267,7 +331,6 @@
       </div>
 
     </section>
-
 
 
     <!-- FILA -->
@@ -291,7 +354,6 @@
     </section>
 
 
-
     <!-- HISTÓRICO -->
 
     <section id="historico" class="page">
@@ -311,7 +373,6 @@
       </div>
 
     </section>
-
 
 
     <!-- GRUPOS -->
@@ -347,7 +408,6 @@
       </div>
 
     </section>
-
 
 
     <!-- CONFIGURAÇÕES -->
