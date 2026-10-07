@@ -15,68 +15,132 @@ const titles = {
   config: "Configurações"
 };
 
+
+/* =========================
+   NAVEGAÇÃO
+========================= */
+
 function showPage(id) {
-  document.querySelectorAll(".page").forEach(x => x.classList.remove("active"));
+
+  document.querySelectorAll(".page").forEach(page => {
+    page.classList.remove("active");
+  });
 
   const page = document.getElementById(id);
-  if (page) page.classList.add("active");
 
-  document.querySelectorAll(".nav").forEach(x =>
-    x.classList.toggle("active", x.dataset.page === id)
-  );
+  if (page) {
+    page.classList.add("active");
+  }
+
+  document.querySelectorAll(".nav").forEach(button => {
+    button.classList.toggle(
+      "active",
+      button.dataset.page === id
+    );
+  });
 
   const title = document.getElementById("pageTitle");
-  if (title) title.textContent = titles[id] || "";
+
+  if (title) {
+    title.textContent = titles[id] || "";
+  }
 
   render();
 
-  document.querySelector(".sidebar")?.classList.remove("open");
+  document
+    .querySelector(".sidebar")
+    ?.classList.remove("open");
 }
 
-document.querySelectorAll(".nav").forEach(b => {
-  b.onclick = () => showPage(b.dataset.page);
+
+document.querySelectorAll(".nav").forEach(button => {
+
+  button.onclick = () => {
+    showPage(button.dataset.page);
+  };
+
 });
+
 
 const menuBtn = document.getElementById("menuBtn");
 
 if (menuBtn) {
-  menuBtn.onclick = () =>
-    document.querySelector(".sidebar")?.classList.toggle("open");
+
+  menuBtn.onclick = () => {
+
+    document
+      .querySelector(".sidebar")
+      ?.classList.toggle("open");
+
+  };
+
 }
+
+
+/* =========================
+   SALVAR DADOS
+========================= */
 
 function save() {
-  localStorage.setItem("ads_offers", JSON.stringify(offers));
-  localStorage.setItem("ads_queue", JSON.stringify(queue));
-  localStorage.setItem("ads_history", JSON.stringify(history));
-  localStorage.setItem("ads_groups", JSON.stringify(groups));
+
+  localStorage.setItem(
+    "ads_offers",
+    JSON.stringify(offers)
+  );
+
+  localStorage.setItem(
+    "ads_queue",
+    JSON.stringify(queue)
+  );
+
+  localStorage.setItem(
+    "ads_history",
+    JSON.stringify(history)
+  );
+
+  localStorage.setItem(
+    "ads_groups",
+    JSON.stringify(groups)
+  );
 }
 
-/* =========================================================
-   BUSCAR OFERTAS DA SHOPEE
-========================================================= */
+
+/* =========================
+   BUSCAR SHOPEE
+========================= */
 
 async function buscarOfertasShopee() {
-  const termo =
-    document.getElementById("searchShopee")?.value.trim() ||
-    document.getElementById("searchTerm")?.value.trim() ||
-    "";
+
+  const campo = document.getElementById("searchShopee");
+
+  const termo = campo
+    ? campo.value.trim()
+    : "";
 
   if (!termo) {
-    alert("Digite o que você quer procurar na Shopee.");
+
+    alert(
+      "Digite o produto que você quer procurar."
+    );
+
     return;
   }
 
-  const botao =
-    document.getElementById("searchShopeeBtn") ||
-    document.querySelector("[onclick*='buscarOfertasShopee']");
 
-  const textoOriginal = botao?.textContent;
+  const botao =
+    document.getElementById("searchShopeeBtn");
+
 
   try {
+
     if (botao) {
+
       botao.disabled = true;
-      botao.textContent = "Buscando...";
+
+      botao.textContent =
+        "⏳ Buscando...";
     }
+
 
     const resposta = await fetch(
       `${API_URL}/buscar-ofertas?q=${encodeURIComponent(termo)}`,
@@ -86,367 +150,913 @@ async function buscarOfertasShopee() {
       }
     );
 
+
     const dados = await resposta.json();
 
+
     if (!resposta.ok) {
+
       throw new Error(
         dados?.erro ||
-        dados?.message ||
-        "Não foi possível buscar as ofertas."
+        "Erro ao buscar ofertas."
       );
+
     }
 
-    const produtos = dados?.data?.productOfferV2?.nodes || [];
+
+    const produtos =
+      dados?.data?.productOfferV2?.nodes || [];
+
 
     if (!produtos.length) {
-      alert("Nenhuma oferta encontrada para essa busca.");
+
+      alert(
+        "Nenhuma oferta encontrada."
+      );
+
       return;
     }
 
-    const ofertasShopee = produtos.map((p, index) => ({
-      id: Date.now() + index,
-      name: p.productName || "Produto da Shopee",
-      price: formatarPreco(p.price),
-      old: "",
-      link: p.productLink || "",
-      aff: p.offerLink || "",
-      image: p.imageUrl || "",
-      sales: p.sales || 0,
-      commissionRate: p.commissionRate || "",
-      shopName: p.shopName || "",
-      category: termo,
-      date: new Date().toLocaleString("pt-BR"),
-      origem: "Shopee"
-    }));
 
-    ofertasShopee.forEach(o => {
-      const existe = offers.some(
-        item =>
-          item.link === o.link ||
-          (item.name === o.name && item.price === o.price)
-      );
+    const novasOfertas = produtos.map(
+      (produto, index) => {
 
-      if (!existe) {
-        offers.unshift(o);
+        return {
+
+          id:
+            Date.now() +
+            index,
+
+          name:
+            produto.productName ||
+            "Produto da Shopee",
+
+          price:
+            formatarPreco(
+              produto.price
+            ),
+
+          old: "",
+
+          link:
+            produto.productLink ||
+            "",
+
+          aff:
+            produto.offerLink ||
+            "",
+
+          image:
+            produto.imageUrl ||
+            "",
+
+          sales:
+            produto.sales || 0,
+
+          commissionRate:
+            produto.commissionRate ||
+            "",
+
+          shopName:
+            produto.shopName ||
+            "",
+
+          category:
+            termo,
+
+          date:
+            new Date().toLocaleString(
+              "pt-BR"
+            ),
+
+          origem:
+            "Shopee"
+
+        };
+
       }
-    });
-
-    save();
-    render();
-
-    alert(
-      `${ofertasShopee.length} ofertas encontradas!\n\nElas já apareceram na área de Ofertas.`
     );
 
+
+    let adicionadas = 0;
+
+
+    novasOfertas.forEach(oferta => {
+
+      const existe =
+        offers.some(item =>
+          item.link === oferta.link
+        );
+
+
+      if (!existe) {
+
+        offers.unshift(oferta);
+
+        adicionadas++;
+
+      }
+
+    });
+
+
+    save();
+
+    render();
+
+
+    alert(
+      `${adicionadas} novas ofertas encontradas!`
+    );
+
+
   } catch (erro) {
+
     console.error(erro);
-    alert("Erro ao buscar ofertas: " + erro.message);
+
+    alert(
+      "Erro ao buscar ofertas: " +
+      erro.message
+    );
+
+
   } finally {
+
     if (botao) {
+
       botao.disabled = false;
-      botao.textContent = textoOriginal || "Buscar ofertas";
+
+      botao.textContent =
+        "🔎 Buscar ofertas";
+
     }
+
   }
+
 }
 
-/* =========================================================
-   FORMATAÇÃO
-========================================================= */
+
+/* =========================
+   PREÇO
+========================= */
 
 function formatarPreco(valor) {
-  if (valor === undefined || valor === null || valor === "") {
+
+  if (
+    valor === undefined ||
+    valor === null ||
+    valor === ""
+  ) {
+
     return "";
+
   }
 
-  const numero = Number(valor);
+
+  const numero =
+    Number(valor);
+
 
   if (Number.isNaN(numero)) {
+
     return String(valor);
+
   }
 
-  return numero.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL"
-  });
+
+  return numero.toLocaleString(
+    "pt-BR",
+    {
+      style: "currency",
+      currency: "BRL"
+    }
+  );
+
 }
 
-/* =========================================================
-   SALVAR OFERTA MANUALMENTE
-========================================================= */
+
+/* =========================
+   SALVAR MANUAL
+========================= */
 
 function saveOffer() {
-  let name =
-    document.getElementById("productName")?.value.trim() ||
+
+  const name =
+    document
+      .getElementById("productName")
+      ?.value.trim() ||
     "Produto da Shopee";
 
-  let price =
-    document.getElementById("price")?.value.trim() || "";
 
-  let old =
-    document.getElementById("oldPrice")?.value.trim() || "";
+  const price =
+    document
+      .getElementById("price")
+      ?.value.trim() ||
+    "";
 
-  let link =
-    document.getElementById("productLink")?.value.trim() || "";
 
-  let aff =
-    document.getElementById("affiliateLink")?.value.trim() || "";
+  const old =
+    document
+      .getElementById("oldPrice")
+      ?.value.trim() ||
+    "";
+
+
+  const link =
+    document
+      .getElementById("productLink")
+      ?.value.trim() ||
+    "";
+
+
+  const aff =
+    document
+      .getElementById("affiliateLink")
+      ?.value.trim() ||
+    "";
+
 
   if (!price || !link) {
-    alert("Preencha o preço e o link do produto.");
+
+    alert(
+      "Preencha o preço e o link do produto."
+    );
+
     return;
   }
+
 
   if (!/^https?:\/\//i.test(link)) {
-    alert("Informe um link válido do produto.");
+
+    alert(
+      "Informe um link válido."
+    );
+
     return;
   }
 
-  let o = {
+
+  const oferta = {
+
     id: Date.now(),
+
     name,
+
     price,
+
     old,
+
     link,
+
     aff,
+
     image: "",
+
     category:
-      document.getElementById("category")?.value || "Geral",
-    date: new Date().toLocaleString("pt-BR"),
-    origem: "Manual"
+      document
+        .getElementById("category")
+        ?.value ||
+      "Achadinhos",
+
+    date:
+      new Date().toLocaleString(
+        "pt-BR"
+      ),
+
+    origem:
+      "Manual"
+
   };
 
-  offers.unshift(o);
-  queue.push(o);
+
+  offers.unshift(oferta);
+
+  queue.push(oferta);
 
   save();
 
-  if (document.getElementById("productName"))
-    document.getElementById("productName").value = "";
+  makePreview(oferta);
 
-  if (document.getElementById("price"))
-    document.getElementById("price").value = "";
+  render();
 
-  if (document.getElementById("oldPrice"))
-    document.getElementById("oldPrice").value = "";
 
-  if (document.getElementById("productLink"))
-    document.getElementById("productLink").value = "";
+  alert(
+    "Oferta salva e colocada na fila!"
+  );
 
-  if (document.getElementById("affiliateLink"))
-    document.getElementById("affiliateLink").value = "";
 
-  makePreview(o);
+  document
+    .getElementById("productName")
+    .value = "";
 
-  alert("Oferta salva e colocada na fila!");
+  document
+    .getElementById("price")
+    .value = "";
+
+  document
+    .getElementById("oldPrice")
+    .value = "";
+
+  document
+    .getElementById("productLink")
+    .value = "";
+
+  document
+    .getElementById("affiliateLink")
+    .value = "";
+
 }
 
-/* =========================================================
-   PRÉVIA DA DIVULGAÇÃO
-========================================================= */
 
-function makePreview(o) {
-  const preview = document.getElementById("preview");
+/* =========================
+   PRÉVIA
+========================= */
+
+function makePreview(oferta) {
+
+  const preview =
+    document.getElementById(
+      "preview"
+    );
+
 
   if (!preview) return;
 
-  const link = o.aff || o.link;
+
+  const link =
+    oferta.aff ||
+    oferta.link;
+
 
   preview.innerHTML = `
-    <h3>Prévia da divulgação</h3>
+
+    <h3>
+      Prévia da divulgação
+    </h3>
 
     <div class="preview-box">
+
 🔥 ACHADINHO DO DIA!
 
-🛍️ ${esc(o.name)}
+🛍️ ${esc(oferta.name)}
 
-💰 Por apenas ${esc(o.price)}
-${o.old ? `🏷️ Antes: ${esc(o.old)}` : ""}
+💰 ${esc(oferta.price)}
+
+${oferta.old
+  ? `🏷️ Antes: ${esc(oferta.old)}`
+  : ""}
 
 🛒 COMPRE AQUI:
+
 ${esc(link)}
 
 👥 Convide um amigo para participar
-${esc(document.getElementById("groupLink")?.value || "")}
+
+${esc(
+  document
+    .getElementById("groupLink")
+    ?.value || ""
+)}
+
     </div>
+
   `;
+
 }
 
-/* =========================================================
-   ADICIONAR GRUPO
-========================================================= */
+
+/* =========================
+   GRUPOS
+========================= */
 
 function addGroup() {
-  const campo = document.getElementById("groupName");
+
+  const campo =
+    document.getElementById(
+      "groupName"
+    );
+
 
   if (!campo) return;
 
-  let n = campo.value.trim();
 
-  if (!n) return;
+  const nome =
+    campo.value.trim();
 
-  groups.push(n);
+
+  if (!nome) return;
+
+
+  groups.push(nome);
 
   campo.value = "";
 
   save();
+
   render();
+
 }
 
-/* =========================================================
-   RENDERIZAR PAINEL
-========================================================= */
+
+/* =========================
+   RENDERIZAR OFERTAS
+========================= */
 
 function render() {
-  const countOffers = document.getElementById("countOffers");
-  const countQueue = document.getElementById("countQueue");
-  const countLinks = document.getElementById("countLinks");
-  const countPublished = document.getElementById("countPublished");
 
-  if (countOffers) countOffers.textContent = offers.length;
-  if (countQueue) countQueue.textContent = queue.length;
-  if (countLinks)
-    countLinks.textContent = offers.filter(x => x.link).length;
-  if (countPublished) countPublished.textContent = history.length;
+  const countOffers =
+    document.getElementById(
+      "countOffers"
+    );
 
-  const list = document.getElementById("offersList");
+  const countQueue =
+    document.getElementById(
+      "countQueue"
+    );
 
-  if (list) {
-    list.innerHTML = offers.length
-      ? offers.map(o => `
-        <div class="offer">
+  const countLinks =
+    document.getElementById(
+      "countLinks"
+    );
 
-          <div class="offer-photo">
-            ${
-              o.image
-                ? `<img src="${esc(o.image)}"
-                     alt="${esc(o.name)}"
-                     style="width:100%;height:100%;object-fit:cover;border-radius:10px;">`
-                : "🛍️"
-            }
-          </div>
+  const countPublished =
+    document.getElementById(
+      "countPublished"
+    );
 
-          <div class="offer-body">
 
-            <span class="tag">
-              ${esc(o.category || "Geral")}
-            </span>
+  if (countOffers) {
 
-            <h3>${esc(o.name)}</h3>
+    countOffers.textContent =
+      offers.length;
 
-            ${
-              o.shopName
-                ? `<p class="muted">🏪 ${esc(o.shopName)}</p>`
-                : ""
-            }
+  }
 
-            ${
-              o.sales !== undefined
-                ? `<p class="muted">📊 ${esc(o.sales)} vendas</p>`
-                : ""
-            }
 
-            ${
-              o.old
-                ? `<div class="old">${esc(o.old)}</div>`
-                : ""
-            }
+  if (countQueue) {
 
-            <div class="price">
-              ${esc(o.price)}
+    countQueue.textContent =
+      queue.length;
+
+  }
+
+
+  if (countLinks) {
+
+    countLinks.textContent =
+      offers.filter(
+        oferta => oferta.link
+      ).length;
+
+  }
+
+
+  if (countPublished) {
+
+    countPublished.textContent =
+      history.length;
+
+  }
+
+
+  const lista =
+    document.getElementById(
+      "offersList"
+    );
+
+
+  if (lista) {
+
+    if (!offers.length) {
+
+      lista.innerHTML = `
+        <div class="empty">
+          Nenhuma oferta encontrada.
+        </div>
+      `;
+
+    } else {
+
+      lista.innerHTML =
+        offers.map(
+          oferta => {
+
+            return `
+
+              <article
+                class="offer-card">
+
+                <div
+                  class="offer-image">
+
+                  ${
+                    oferta.image
+
+                    ? `
+
+                      <img
+                        src="${esc(
+                          oferta.image
+                        )}"
+
+                        alt="${esc(
+                          oferta.name
+                        )}"
+
+                        loading="lazy"
+
+                        onerror="
+                          this.style.display='none';
+                          this.parentElement.classList.add('image-error');
+                        "
+                      >
+
+                    `
+
+                    : `
+
+                      <div
+                        class="image-placeholder">
+                        🛍️
+                      </div>
+
+                    `
+                  }
+
+                </div>
+
+
+                <div
+                  class="offer-content">
+
+                  <span
+                    class="tag">
+
+                    ${esc(
+                      oferta.category ||
+                      "Achadinhos"
+                    )}
+
+                  </span>
+
+
+                  <h3>
+                    ${esc(
+                      oferta.name
+                    )}
+                  </h3>
+
+
+                  ${
+                    oferta.shopName
+
+                    ? `
+
+                      <p
+                        class="shop">
+
+                        🏪 ${esc(
+                          oferta.shopName
+                        )}
+
+                      </p>
+
+                    `
+
+                    : ""
+                  }
+
+
+                  <div
+                    class="offer-price">
+
+                    ${esc(
+                      oferta.price
+                    )}
+
+                  </div>
+
+
+                  ${
+                    oferta.sales
+
+                    ? `
+
+                      <div
+                        class="sales">
+
+                        🔥 ${esc(
+                          oferta.sales
+                        )} vendas
+
+                      </div>
+
+                    `
+
+                    : ""
+                  }
+
+
+                  <button
+                    class="primary offer-button"
+
+                    onclick="abrirProduto('${esc(
+                      oferta.aff ||
+                      oferta.link
+                    )}')">
+
+                    🛒 Ver oferta
+
+                  </button>
+
+
+                  <button
+                    class="gold offer-button"
+
+                    onclick="makePreviewById(${oferta.id})">
+
+                    ✍️ Gerar divulgação
+
+                  </button>
+
+                </div>
+
+              </article>
+
+            `;
+
+          }
+        ).join("");
+
+    }
+
+  }
+
+
+  const recentes =
+    document.getElementById(
+      "recentOffers"
+    );
+
+
+  if (recentes) {
+
+    recentes.innerHTML =
+      offers
+        .slice(0, 5)
+        .map(
+          oferta => `
+
+            <div
+              class="queue-item">
+
+              <b>
+                ${esc(
+                  oferta.name
+                )}
+              </b>
+
+              <br>
+
+              <span
+                class="muted">
+
+                ${esc(
+                  oferta.price
+                )}
+
+                •
+                ${esc(
+                  oferta.date
+                )}
+
+              </span>
+
             </div>
 
-            <p class="muted">
-              🔗 Link cadastrado
-            </p>
+          `
+        )
+        .join("") ||
 
-            <button
-              class="gold"
-              onclick="makePreview(${JSON.stringify(o).replace(/"/g, "&quot;")})">
-              Ver divulgação
-            </button>
-
-          </div>
+      `
+        <div class="empty">
+          Nenhuma oferta cadastrada ainda.
         </div>
-      `).join("")
-      : `<div class="empty">Nenhuma oferta cadastrada.</div>`;
+      `;
+
   }
 
-  const recentOffers = document.getElementById("recentOffers");
 
-  if (recentOffers) {
-    recentOffers.innerHTML =
-      offers.slice(0, 5).map(o => `
-        <div class="queue-item">
-          <b>${esc(o.name)}</b>
-          <br>
-          <span class="muted">
-            ${esc(o.price)} • ${esc(o.date)}
-          </span>
+  const fila =
+    document.getElementById(
+      "queueList"
+    );
+
+
+  if (fila) {
+
+    fila.innerHTML =
+      queue
+        .map(
+          oferta => `
+
+            <div
+              class="queue-item">
+
+              <b>
+                ${esc(
+                  oferta.name
+                )}
+              </b>
+
+              <br>
+
+              <span
+                class="muted">
+
+                ${esc(
+                  oferta.price
+                )}
+                • aguardando publicação
+
+              </span>
+
+            </div>
+
+          `
+        )
+        .join("") ||
+
+      `
+        <div class="empty">
+          Nenhuma oferta na fila.
         </div>
-      `).join("") ||
-      `<div class="empty">Nenhuma oferta cadastrada ainda.</div>`;
+      `;
+
   }
 
-  const queueList = document.getElementById("queueList");
 
-  if (queueList) {
-    queueList.innerHTML =
-      queue.map(o => `
-        <div class="queue-item">
-          <b>${esc(o.name)}</b>
-          <br>
-          <span class="muted">
-            ${esc(o.price)} • aguardando publicação
-          </span>
+  const historico =
+    document.getElementById(
+      "historyList"
+    );
+
+
+  if (historico) {
+
+    historico.innerHTML =
+      history
+        .map(
+          oferta => `
+
+            <div
+              class="history-item">
+
+              <b>
+                ${esc(
+                  oferta.name
+                )}
+              </b>
+
+              <br>
+
+              <span
+                class="muted">
+
+                ${esc(
+                  oferta.date
+                )}
+
+              </span>
+
+            </div>
+
+          `
+        )
+        .join("") ||
+
+      `
+        <div class="empty">
+          Nenhuma publicação registrada.
         </div>
-      `).join("") ||
-      `<div class="empty">Nenhuma oferta na fila.</div>`;
+      `;
+
   }
 
-  const historyList = document.getElementById("historyList");
 
-  if (historyList) {
-    historyList.innerHTML =
-      history.map(o => `
-        <div class="history-item">
-          <b>${esc(o.name)}</b>
-          <br>
-          <span class="muted">
-            ${esc(o.date)}
-          </span>
-        </div>
-      `).join("") ||
-      `<div class="empty">Nenhuma publicação registrada.</div>`;
+  const grupos =
+    document.getElementById(
+      "groupsList"
+    );
+
+
+  if (grupos) {
+
+    grupos.innerHTML =
+      groups
+        .map(
+          grupo => `
+
+            <div
+              class="group">
+
+              <span>
+                👥 ${esc(grupo)}
+              </span>
+
+              <span>
+                ✓
+              </span>
+
+            </div>
+
+          `
+        )
+        .join("");
+
   }
 
-  const groupsList = document.getElementById("groupsList");
-
-  if (groupsList) {
-    groupsList.innerHTML =
-      groups.map(g => `
-        <div class="group">
-          <span>👥 ${esc(g)}</span>
-          <span>✓</span>
-        </div>
-      `).join("");
-  }
 }
 
-/* =========================================================
-   SEGURANÇA DO HTML
-========================================================= */
 
-function esc(s) {
-  return String(s ?? "").replace(
-    /[&<>"']/g,
-    m => ({
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#039;"
-    }[m])
+/* =========================
+   ABRIR PRODUTO
+========================= */
+
+function abrirProduto(link) {
+
+  if (!link) {
+
+    alert(
+      "Este produto não possui link."
+    );
+
+    return;
+  }
+
+
+  window.open(
+    link,
+    "_blank"
   );
+
 }
+
+
+/* =========================
+   PRÉVIA PELO ID
+========================= */
+
+function makePreviewById(id) {
+
+  const oferta =
+    offers.find(
+      item =>
+        Number(item.id) ===
+        Number(id)
+    );
+
+
+  if (!oferta) return;
+
+
+  makePreview(oferta);
+
+}
+
+
+/* =========================
+   SEGURANÇA
+========================= */
+
+function esc(valor) {
+
+  return String(
+    valor ?? ""
+  ).replace(
+    /[&<>"']/g,
+
+    caractere => ({
+
+      "&": "&amp;",
+
+      "<": "&lt;",
+
+      ">": "&gt;",
+
+      '"': "&quot;",
+
+      "'": "&#039;"
+
+    }[caractere])
+
+  );
+
+}
+
+
+/* =========================
+   INICIALIZAÇÃO
+========================= */
 
 render();
