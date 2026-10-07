@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Achadinhos da Shoo</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">🛍️ <span>ACHADINHOS<br>DA SHOO</span></div>
+    <nav>
+      <button class="nav active" data-page="inicio">🏠 Início</button>
+      <button class="nav" data-page="ofertas">🔥 Ofertas</button>
+      <button class="nav" data-page="criar">✍️ Criar divulgação</button>
+      <button class="nav" data-page="fila">📤 Fila de publicação</button>
+      <button class="nav" data-page="historico">📊 Histórico</button>
+      <button class="nav" data-page="grupos">👥 Grupos</button>
+      <button class="nav" data-page="config">⚙️ Configurações</button>
+    </nav>
+  </aside>
+
+  <main>
+    <header>
+      <button id="menuBtn" class="mobile-menu">☰</button>
+      <div>
+        <h1 id="pageTitle">Início</h1>
+        <p>Seu painel automático de ofertas</p>
+      </div>
+    </header>
+
+    <section id="inicio" class="page active">
+      <div class="cards">
+        <div class="card"><span>🔥</span><b id="countOffers">0</b><small>Ofertas encontradas</small></div>
+        <div class="card"><span>📤</span><b id="countPublished">0</b><small>Publicadas hoje</small></div>
+        <div class="card"><span>⏳</span><b id="countQueue">0</b><small>Na fila</small></div>
+        <div class="card"><span>🔗</span><b id="countLinks">0</b><small>Links cadastrados</small></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title"><h2>🔥 Últimas ofertas</h2><button class="gold" onclick="showPage('ofertas')">Ver ofertas</button></div>
+        <div id="recentOffers" class="empty">Nenhuma oferta cadastrada ainda.</div>
+      </div>
+    </section>
+
+    <section id="ofertas" class="page">
+      <div class="panel automation-panel">
+        <div class="panel-title"><div><h2>🤖 Automação</h2><p class="muted">Um clique para buscar, selecionar, criar as divulgações e preencher a fila.</p></div></div>
+        <button id="startAutomationBtn" class="automation-btn" onclick="iniciarAutomacao()">▶️ INICIAR AUTOMAÇÃO</button>
+        <div id="automationStatus" class="automation-status">⚪ Automação parada. Clique em iniciar para começar.</div>
+      </div>
+      <div class="panel">
+        <div class="panel-title"><h2>🔥 Ofertas</h2><button class="gold" onclick="showPage('criar')">+ Adicionar oferta</button></div>
+        <div id="offersList" class="offer-grid"></div>
+      </div>
+    </section>
+
+    <section id="criar" class="page">
+      <div class="panel form-panel">
+        <h2>✍️ Criar divulgação</h2>
+        <p class="muted">O link do produto é obrigatório.</p>
+        <label>Nome do produto</label>
+        <input id="productName" placeholder="Ex.: Air Fryer 4L">
+        <div class="two">
+          <div><label>Preço antigo</label><input id="oldPrice" placeholder="R$ 199,90"></div>
+          <div><label>Preço da oferta *</label><input id="price" placeholder="R$ 89,90"></div>
+        </div>
+        <label>Link do produto *</label>
+        <input id="productLink" placeholder="https://shopee.com.br/...">
+        <label>Link de afiliado</label>
+        <input id="affiliateLink" placeholder="Cole seu link de afiliado">
+        <label>Categoria</label>
+        <select id="category"><option>Achadinhos</option><option>Casa</option><option>Eletrônicos</option><option>Moda</option><option>Beleza</option><option>Infantil</option><option>Automotivo</option></select>
+        <button class="primary" onclick="saveOffer()">Salvar oferta</button>
+        <div id="preview" class="preview"></div>
+      </div>
+    </section>
+
+    <section id="fila" class="page">
+      <div class="panel"><h2>📤 Fila de publicação</h2><div id="queueList" class="empty">Nenhuma oferta na fila.</div></div>
+    </section>
+
+    <section id="historico" class="page">
+      <div class="panel"><h2>📊 Histórico</h2><div id="historyList" class="empty">Nenhuma publicação registrada.</div></div>
+    </section>
+
+    <section id="grupos" class="page">
+      <div class="panel">
+        <h2>👥 Grupos de destino</h2>
+        <p class="muted">Nesta primeira versão você pode cadastrar os grupos. A integração automática será conectada depois.</p>
+        <input id="groupName" placeholder="Nome do grupo">
+        <button class="primary" onclick="addGroup()">Adicionar grupo</button>
+        <div id="groupsList"></div>
+      </div>
+    </section>
+
+    <section id="config" class="page">
+      <div class="panel form-panel">
+        <h2>⚙️ Configurações</h2>
+        <label>Nome do sistema</label><input value="Achadinhos da Shoo">
+        <label>Link do grupo</label><input id="groupLink" value="https://chat.whatsapp.com/LQGGHRSAtcTDQmoHF4S55n?s=cl&p=i&mlu=0&ilr=4">
+        <label>Frase do convite</label><input value="Convide um amigo para participar">
+        <label>Publicação automática</label>
+        <select><option>Desativada — configurar integração</option><option>Ativada</option></select>
+        <button class="primary" onclick="alert('Configurações salvas neste protótipo.')">Salvar configurações</button>
+      </div>
+    </section>
+  </main>
+</div>
+<script src="script.js"></script>
+</body>
+</html>
