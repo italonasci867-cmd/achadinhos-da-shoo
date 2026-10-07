@@ -6,10 +6,17 @@
 <title>Achadinhos da Shoo</title>
 <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
+
 <div class="app">
+
   <aside class="sidebar">
-    <div class="brand">🛍️ <span>ACHADINHOS<br>DA SHOO</span></div>
+
+    <div class="brand">
+      🛍️ <span>ACHADINHOS<br>DA SHOO</span>
+    </div>
+
     <nav>
       <button class="nav active" data-page="inicio">🏠 Início</button>
       <button class="nav" data-page="ofertas">🔥 Ofertas</button>
@@ -19,94 +26,488 @@
       <button class="nav" data-page="grupos">👥 Grupos</button>
       <button class="nav" data-page="config">⚙️ Configurações</button>
     </nav>
+
   </aside>
 
   <main>
+
     <header>
       <button id="menuBtn" class="mobile-menu">☰</button>
+
       <div>
         <h1 id="pageTitle">Início</h1>
         <p>Seu painel automático de ofertas</p>
       </div>
     </header>
 
+
+    <!-- INÍCIO -->
+
     <section id="inicio" class="page active">
+
       <div class="cards">
-        <div class="card"><span>🔥</span><b id="countOffers">0</b><small>Ofertas encontradas</small></div>
-        <div class="card"><span>📤</span><b id="countPublished">0</b><small>Publicadas hoje</small></div>
-        <div class="card"><span>⏳</span><b id="countQueue">0</b><small>Na fila</small></div>
-        <div class="card"><span>🔗</span><b id="countLinks">0</b><small>Links cadastrados</small></div>
+
+        <div class="card">
+          <span>🔥</span>
+          <b id="countOffers">0</b>
+          <small>Ofertas encontradas</small>
+        </div>
+
+        <div class="card">
+          <span>📤</span>
+          <b id="countPublished">0</b>
+          <small>Publicadas hoje</small>
+        </div>
+
+        <div class="card">
+          <span>⏳</span>
+          <b id="countQueue">0</b>
+          <small>Na fila</small>
+        </div>
+
+        <div class="card">
+          <span>🔗</span>
+          <b id="countLinks">0</b>
+          <small>Links cadastrados</small>
+        </div>
+
       </div>
+
+
       <div class="panel">
-        <div class="panel-title"><h2>🔥 Últimas ofertas</h2><button class="gold" onclick="showPage('ofertas')">Ver ofertas</button></div>
-        <div id="recentOffers" class="empty">Nenhuma oferta cadastrada ainda.</div>
+
+        <div class="panel-title">
+
+          <h2>🔥 Últimas ofertas</h2>
+
+          <button
+            class="gold"
+            onclick="showPage('ofertas')">
+            Ver ofertas
+          </button>
+
+        </div>
+
+        <div id="recentOffers" class="empty">
+          Nenhuma oferta cadastrada ainda.
+        </div>
+
       </div>
+
     </section>
+
+
+    <!-- OFERTAS -->
 
     <section id="ofertas" class="page">
+
       <div class="panel automation-panel">
-        <div class="panel-title"><div><h2>🤖 Automação</h2><p class="muted">Um clique para buscar, selecionar, criar as divulgações e preencher a fila.</p></div></div>
-        <button id="startAutomationBtn" class="automation-btn" onclick="iniciarAutomacao()">▶️ INICIAR AUTOMAÇÃO</button>
-        <div id="automationStatus" class="automation-status">⚪ Automação parada. Clique em iniciar para começar.</div>
+
+        <div class="panel-title">
+
+          <div>
+
+            <h2>🤖 Automação</h2>
+
+            <p class="muted">
+              Um clique para buscar, selecionar, criar as divulgações e preencher a fila.
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <button
+          id="startAutomationBtn"
+          class="automation-btn"
+          onclick="iniciarAutomacao()">
+
+          ▶️ INICIAR AUTOMAÇÃO
+
+        </button>
+
+
+        <div
+          id="automationStatus"
+          class="automation-status">
+
+          ⚪ Automação parada. Clique em iniciar para começar.
+
+        </div>
+
       </div>
+
+
       <div class="panel">
-        <div class="panel-title"><h2>🔥 Ofertas</h2><button class="gold" onclick="showPage('criar')">+ Adicionar oferta</button></div>
-        <div id="offersList" class="offer-grid"></div>
+
+        <div class="panel-title">
+
+          <h2>🔥 Ofertas</h2>
+
+          <button
+            class="gold"
+            onclick="showPage('criar')">
+
+            + Adicionar oferta
+
+          </button>
+
+        </div>
+
+
+        <div
+          id="offersList"
+          class="offer-grid">
+        </div>
+
       </div>
+
     </section>
+
+
+    <!-- CRIAR DIVULGAÇÃO -->
 
     <section id="criar" class="page">
+
       <div class="panel form-panel">
+
         <h2>✍️ Criar divulgação</h2>
-        <p class="muted">O link do produto é obrigatório.</p>
+
+        <p class="muted">
+          O link do produto é obrigatório.
+        </p>
+
+
         <label>Nome do produto</label>
-        <input id="productName" placeholder="Ex.: Air Fryer 4L">
+
+        <input
+          id="productName"
+          placeholder="Ex.: Air Fryer 4L">
+
+
         <div class="two">
-          <div><label>Preço antigo</label><input id="oldPrice" placeholder="R$ 199,90"></div>
-          <div><label>Preço da oferta *</label><input id="price" placeholder="R$ 89,90"></div>
+
+          <div>
+
+            <label>Preço antigo</label>
+
+            <input
+              id="oldPrice"
+              placeholder="R$ 199,90">
+
+          </div>
+
+
+          <div>
+
+            <label>Preço da oferta *</label>
+
+            <input
+              id="price"
+              placeholder="R$ 89,90">
+
+          </div>
+
         </div>
+
+
         <label>Link do produto *</label>
-        <input id="productLink" placeholder="https://shopee.com.br/...">
+
+        <input
+          id="productLink"
+          placeholder="https://shopee.com.br/...">
+
+
         <label>Link de afiliado</label>
-        <input id="affiliateLink" placeholder="Cole seu link de afiliado">
+
+        <input
+          id="affiliateLink"
+          placeholder="Cole seu link de afiliado">
+
+
         <label>Categoria</label>
-        <select id="category"><option>Achadinhos</option><option>Casa</option><option>Eletrônicos</option><option>Moda</option><option>Beleza</option><option>Infantil</option><option>Automotivo</option></select>
-        <button class="primary" onclick="saveOffer()">Salvar oferta</button>
-        <div id="preview" class="preview"></div>
+
+        <select id="category">
+
+          <option>Achadinhos</option>
+          <option>Casa</option>
+          <option>Eletrônicos</option>
+          <option>Moda</option>
+          <option>Beleza</option>
+          <option>Infantil</option>
+          <option>Automotivo</option>
+
+        </select>
+
+
+        <button
+          class="primary"
+          onclick="saveOffer()">
+
+          Salvar oferta
+
+        </button>
+
+
+        <div
+          id="preview"
+          class="preview">
+        </div>
+
       </div>
+
     </section>
+
+
+    <!-- FILA -->
 
     <section id="fila" class="page">
-      <div class="panel"><h2>📤 Fila de publicação</h2><div id="queueList" class="empty">Nenhuma oferta na fila.</div></div>
+
+      <div class="panel">
+
+        <h2>📤 Fila de publicação</h2>
+
+        <div
+          id="queueList"
+          class="empty">
+
+          Nenhuma oferta na fila.
+
+        </div>
+
+      </div>
+
     </section>
+
+
+    <!-- HISTÓRICO -->
 
     <section id="historico" class="page">
-      <div class="panel"><h2>📊 Histórico</h2><div id="historyList" class="empty">Nenhuma publicação registrada.</div></div>
+
+      <div class="panel">
+
+        <h2>📊 Histórico</h2>
+
+        <div
+          id="historyList"
+          class="empty">
+
+          Nenhuma publicação registrada.
+
+        </div>
+
+      </div>
+
     </section>
+
+
+    <!-- GRUPOS -->
 
     <section id="grupos" class="page">
+
       <div class="panel">
+
         <h2>👥 Grupos de destino</h2>
-        <p class="muted">Nesta primeira versão você pode cadastrar os grupos. A integração automática será conectada depois.</p>
-        <input id="groupName" placeholder="Nome do grupo">
-        <button class="primary" onclick="addGroup()">Adicionar grupo</button>
+
+        <p class="muted">
+          Cadastre os grupos que receberão as divulgações.
+        </p>
+
+
+        <input
+          id="groupName"
+          placeholder="Nome do grupo">
+
+
+        <button
+          class="primary"
+          onclick="addGroup()">
+
+          Adicionar grupo
+
+        </button>
+
+
         <div id="groupsList"></div>
+
       </div>
+
     </section>
 
+
+    <!-- CONFIGURAÇÕES -->
+
     <section id="config" class="page">
+
       <div class="panel form-panel">
+
         <h2>⚙️ Configurações</h2>
-        <label>Nome do sistema</label><input value="Achadinhos da Shoo">
-        <label>Link do grupo</label><input id="groupLink" value="https://chat.whatsapp.com/LQGGHRSAtcTDQmoHF4S55n?s=cl&p=i&mlu=0&ilr=4">
-        <label>Frase do convite</label><input value="Convide um amigo para participar">
-        <label>Publicação automática</label>
-        <select><option>Desativada — configurar integração</option><option>Ativada</option></select>
-        <button class="primary" onclick="alert('Configurações salvas neste protótipo.')">Salvar configurações</button>
+
+
+        <label>Nome do sistema</label>
+
+        <input
+          id="systemName"
+          value="Achadinhos da Shoo">
+
+
+        <label>Link do grupo</label>
+
+        <input
+          id="groupLink"
+          value="https://chat.whatsapp.com/LQGGHRSAtcTDQmoHF4S55n?s=cl&p=i&mlu=0&ilr=4">
+
+
+        <label>Frase do convite</label>
+
+        <input
+          id="inviteText"
+          value="Convide um amigo para participar">
+
+
+        <!-- HORÁRIOS -->
+
+        <div class="panel schedule-panel">
+
+          <h2>🕐 Horários de funcionamento</h2>
+
+          <p class="muted">
+            Defina quando o sistema poderá trabalhar com a fila de ofertas.
+          </p>
+
+
+          <div class="two">
+
+            <div>
+
+              <label>🟢 Horário de início</label>
+
+              <input
+                type="time"
+                id="startTime"
+                value="08:00">
+
+            </div>
+
+
+            <div>
+
+              <label>🔴 Horário de término</label>
+
+              <input
+                type="time"
+                id="endTime"
+                value="22:00">
+
+            </div>
+
+          </div>
+
+
+          <label>⏱️ Intervalo entre divulgações</label>
+
+          <select id="publishInterval">
+
+            <option value="5">A cada 5 minutos</option>
+            <option value="10">A cada 10 minutos</option>
+            <option value="15">A cada 15 minutos</option>
+            <option value="20">A cada 20 minutos</option>
+            <option value="30" selected>A cada 30 minutos</option>
+            <option value="45">A cada 45 minutos</option>
+            <option value="60">A cada 1 hora</option>
+            <option value="120">A cada 2 horas</option>
+
+          </select>
+
+
+          <label>📅 Dias de funcionamento</label>
+
+
+          <div class="days-grid">
+
+            <label class="day-option">
+              <input type="checkbox" id="daySunday" checked>
+              Domingo
+            </label>
+
+            <label class="day-option">
+              <input type="checkbox" id="dayMonday" checked>
+              Segunda
+            </label>
+
+            <label class="day-option">
+              <input type="checkbox" id="dayTuesday" checked>
+              Terça
+            </label>
+
+            <label class="day-option">
+              <input type="checkbox" id="dayWednesday" checked>
+              Quarta
+            </label>
+
+            <label class="day-option">
+              <input type="checkbox" id="dayThursday" checked>
+              Quinta
+            </label>
+
+            <label class="day-option">
+              <input type="checkbox" id="dayFriday" checked>
+              Sexta
+            </label>
+
+            <label class="day-option">
+              <input type="checkbox" id="daySaturday" checked>
+              Sábado
+            </label>
+
+          </div>
+
+
+          <label>🤖 Publicação automática</label>
+
+          <select id="autoPublish">
+
+            <option value="off">
+              Desativada
+            </option>
+
+            <option value="on">
+              Ativada
+            </option>
+
+          </select>
+
+
+          <div
+            id="scheduleStatus"
+            class="automation-status">
+
+            ⚪ Horários ainda não configurados.
+
+          </div>
+
+        </div>
+
+
+        <button
+          class="primary"
+          onclick="salvarConfiguracoes()">
+
+          💾 SALVAR CONFIGURAÇÕES
+
+        </button>
+
       </div>
+
     </section>
+
   </main>
+
 </div>
+
+
 <script src="script.js"></script>
+
 </body>
 </html>
