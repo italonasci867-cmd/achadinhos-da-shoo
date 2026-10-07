@@ -9,14 +9,21 @@ let offers = JSON.parse(localStorage.getItem("ads_offers") || "[]");
 let queue = JSON.parse(localStorage.getItem("ads_queue") || "[]");
 let history = JSON.parse(localStorage.getItem("ads_history") || "[]");
 let groups = JSON.parse(localStorage.getItem("ads_groups") || "[]");
+let usedPromos = JSON.parse(
+  localStorage.getItem("ads_used_promos") || "[]"
+);
 
 let settings = JSON.parse(
   localStorage.getItem("ads_settings") || "{}"
 );
 
 let automationRunning = false;
-let scheduleTimer = null;
+let queueTimer = null;
 
+
+/* =========================
+   NAVEGAÇÃO
+========================= */
 
 const titles = {
   inicio: "Início",
@@ -27,11 +34,6 @@ const titles = {
   grupos: "Grupos",
   config: "Configurações"
 };
-
-
-/* =========================
-   NAVEGAÇÃO
-========================= */
 
 function showPage(id) {
 
@@ -54,10 +56,12 @@ function showPage(id) {
       )
     );
 
-  const title = document.getElementById("pageTitle");
+  const title =
+    document.getElementById("pageTitle");
 
   if (title) {
-    title.textContent = titles[id] || id;
+    title.textContent =
+      titles[id] || id;
   }
 
   render();
@@ -98,7 +102,7 @@ if (menuBtn) {
 
 
 /* =========================
-   SALVAR DADOS
+   SALVAR
 ========================= */
 
 function save() {
@@ -123,11 +127,16 @@ function save() {
     JSON.stringify(groups)
   );
 
+  localStorage.setItem(
+    "ads_used_promos",
+    JSON.stringify(usedPromos)
+  );
+
 }
 
 
 /* =========================
-   FORMATAÇÃO
+   UTILIDADES
 ========================= */
 
 function formatBRL(v) {
@@ -149,7 +158,6 @@ function formatBRL(v) {
       currency: "BRL"
     }
   );
-
 }
 
 
@@ -185,53 +193,309 @@ function makeId(link) {
 
 
 /* =========================
-   TEXTOS DAS DIVULGAÇÕES
+   GERADOR DE TEXTOS
 ========================= */
 
-function makePromo(o, index = 0) {
+const promoOpenings = [
 
-  const openings = [
+  "🚨 OLHA O ACHADINHO QUE ACABOU DE APARECER!",
 
-    "🚨 OLHA O ACHADINHO QUE APARECEU!",
+  "😱 VOCÊ PRECISA VER ESSE PREÇO!",
 
-    "😱 ESSE PREÇO MERECE ATENÇÃO!",
+  "🔥 MAIS UM ACHADO BOM DEMAIS!",
 
-    "🔥 CORRE DAR UMA OLHADA NESSE ACHADO!",
+  "🛍️ ACHEI ESSA OFERTA E VIM COMPARTILHAR!",
 
-    "🛍️ ACHEI UMA OFERTA DAQUELAS!",
+  "👀 PARA TUDO E OLHA ESSE ACHADO!",
 
-    "💥 PREÇO BAIXO ENCONTRADO NA SHOPEE!",
+  "💥 ESSA OFERTA CHAMOU MUITO A ATENÇÃO!",
 
-    "👀 OLHA O QUE EU ENCONTREI!",
+  "🤯 OLHA O PREÇO DESSE PRODUTO!",
 
-    "✨ MAIS UM ACHADINHO PRA SALVAR!",
+  "✨ ACHADINHO DO DIA ENCONTRADO!",
 
-    "🤯 ESSE VALOR CHAMOU ATENÇÃO!"
+  "🚨 ATENÇÃO PARA ESSA OFERTA!",
 
-  ];
+  "😍 ESSE AQUI VALE A PENA CONFERIR!",
 
-  const open =
-    openings[index % openings.length];
+  "💸 PREÇO BAIXO ENCONTRADO NA SHOPEE!",
 
-  const link =
-    o.aff || o.link;
+  "🛒 MAIS UMA OFERTA PRA COLOCAR NA LISTA!",
 
-  return `${open}
+  "🔥 QUEM ESTAVA PROCURANDO ISSO VAI GOSTAR!",
 
-🛒 ${o.name}
-💰 ${o.price}
+  "😳 OLHA O QUE EU ACABEI DE ENCONTRAR!",
 
-👉 COMPRE AQUI:
-${link}
+  "🎯 ACHADO INTERESSANTE ENCONTRADO!",
 
-👥 ${INVITE_TEXT}
-${GROUP_LINK}`;
+  "⚡ ESSA OFERTA MERECE UM OLHAR!",
+
+  "🤑 PREÇO QUE CHAMOU ATENÇÃO!",
+
+  "💎 MAIS UM ACHADINHO SELECIONADO!",
+
+  "📢 ENCONTREI UMA OFERTA BEM INTERESSANTE!",
+
+  "🙌 OLHA ESSA OPORTUNIDADE!"
+];
+
+
+const promoMiddle = [
+
+  "Se estava procurando algo assim, vale conferir 👀",
+
+  "Dá uma olhada antes que o preço mude 🔥",
+
+  "Pode ser uma boa oportunidade para aproveitar 🛒",
+
+  "Olha todos os detalhes antes de comprar 👇",
+
+  "Essa apareceu entre os achados de hoje 😍",
+
+  "Vale conferir o preço diretamente na Shopee 💰",
+
+  "Mais uma opção interessante para colocar na lista ✨",
+
+  "Se gostou, confira a oferta pelo link abaixo 👇",
+
+  "Essa chamou atenção pelo valor encontrado 🤯",
+
+  "Confira enquanto a oferta estiver disponível ⚡",
+
+  "Pode ser aquele achado que você estava procurando 👀",
+
+  "Dá uma conferida nessa oportunidade 🛍️",
+
+  "Mais um produto selecionado para vocês 🔥",
+
+  "Vale a pena conferir as condições da oferta 💸",
+
+  "O preço encontrado foi esse, mas pode mudar a qualquer momento ⏰"
+];
+
+
+const promoClosings = [
+
+  "👇 Clique e confira",
+
+  "🛒 Veja a oferta",
+
+  "👉 Confira aqui",
+
+  "🔥 Aproveite enquanto estiver disponível",
+
+  "👀 Dá uma olhada",
+
+  "💰 Confira o preço",
+
+  "➡️ Acesse a oferta",
+
+  "🛍️ Veja todos os detalhes",
+
+  "⚡ Confira agora",
+
+  "👇 Link da oferta"
+];
+
+
+function hashNumber(text) {
+
+  let hash = 0;
+
+  for (let i = 0; i < text.length; i++) {
+
+    hash =
+      ((hash << 5) - hash) +
+      text.charCodeAt(i);
+
+    hash |= 0;
+  }
+
+  return Math.abs(hash);
 
 }
 
 
+function makeUniquePromo(o, index = 0) {
+
+  const seed =
+    `${o.name}|${o.price}|${o.link}|${index}`;
+
+  const base =
+    hashNumber(seed);
+
+
+  /*
+    Criamos muitas combinações:
+
+    20 aberturas
+    15 frases intermediárias
+    10 fechamentos
+
+    = até 3.000 combinações.
+  */
+
+  let openingIndex =
+    base % promoOpenings.length;
+
+  let middleIndex =
+    Math.floor(base / 7) %
+    promoMiddle.length;
+
+  let closingIndex =
+    Math.floor(base / 13) %
+    promoClosings.length;
+
+
+  let promo = "";
+
+
+  for (let tentativa = 0; tentativa < 300; tentativa++) {
+
+    const oi =
+      (openingIndex + tentativa) %
+      promoOpenings.length;
+
+    const mi =
+      (middleIndex + tentativa * 3) %
+      promoMiddle.length;
+
+    const ci =
+      (closingIndex + tentativa * 5) %
+      promoClosings.length;
+
+
+    promo = `${promoOpenings[oi]}
+
+🛒 ${o.name}
+💰 ${o.price}
+
+${promoMiddle[mi]}
+
+${promoClosings[ci]}:
+${o.aff || o.link}
+
+👥 ${INVITE_TEXT}
+${GROUP_LINK}`;
+
+
+    if (!usedPromos.includes(promo)) {
+      break;
+    }
+
+  }
+
+
+  usedPromos.push(promo);
+
+  /*
+    Mantém o histórico de textos sem
+    deixar o localStorage crescer demais.
+  */
+
+  if (usedPromos.length > 3000) {
+    usedPromos =
+      usedPromos.slice(-2500);
+  }
+
+
+  return promo;
+}
+
+
 /* =========================
-   BUSCAR OFERTAS
+   PALAVRAS DE BUSCA
+========================= */
+
+const keywords = [
+
+  "fone bluetooth",
+  "fone sem fio",
+  "caixa de som",
+  "smartwatch",
+  "relógio inteligente",
+  "celular",
+  "carregador",
+  "cabo usb",
+  "power bank",
+  "suporte celular",
+
+  "air fryer",
+  "liquidificador",
+  "batedeira",
+  "cafeteira",
+  "panela",
+  "jogo de panelas",
+  "utensílios cozinha",
+  "organizador cozinha",
+  "potes cozinha",
+  "casa decoração",
+
+  "mesa",
+  "cadeira",
+  "sofá",
+  "armário",
+  "prateleira",
+  "organizador",
+  "tapete",
+  "cortina",
+  "luminária",
+  "decoração",
+
+  "calça feminina",
+  "vestido feminino",
+  "blusa feminina",
+  "conjunto feminino",
+  "tênis feminino",
+  "bolsa feminina",
+  "moda feminina",
+
+  "camiseta masculina",
+  "calça masculina",
+  "tênis masculino",
+  "boné masculino",
+  "moda masculina",
+
+  "maquiagem",
+  "skincare",
+  "perfume",
+  "cabelo",
+  "beleza",
+
+  "brinquedo",
+  "material escolar",
+  "infantil",
+  "bebê",
+
+  "acessórios carro",
+  "automotivo",
+  "organizador carro",
+
+  "mouse",
+  "teclado",
+  "headset gamer",
+  "mousepad",
+  "notebook",
+  "informática",
+
+  "ferramentas",
+  "furadeira",
+  "casa",
+  "jardim",
+
+  "academia",
+  "esporte",
+  "fitness",
+
+  "pet",
+  "cachorro",
+  "gato"
+
+];
+
+
+/* =========================
+   BUSCAR SHOPEE
 ========================= */
 
 async function buscarOfertas(keyword) {
@@ -241,19 +505,24 @@ async function buscarOfertas(keyword) {
       `${API_URL}/buscar-ofertas?q=${encodeURIComponent(keyword)}`
     );
 
+
   const data =
     await response.json();
+
 
   if (!response.ok) {
 
     throw new Error(
-      data.erro || "Erro na Shopee"
+      data.erro ||
+      "Erro na Shopee"
     );
 
   }
 
+
   return (
-    data.data?.productOfferV2?.nodes || []
+    data.data?.productOfferV2?.nodes ||
+    []
   )
     .map(x => ({
 
@@ -276,7 +545,8 @@ async function buscarOfertas(keyword) {
       old: "",
 
       link:
-        x.productLink || "",
+        x.productLink ||
+        "",
 
       aff:
         x.offerLink ||
@@ -284,22 +554,30 @@ async function buscarOfertas(keyword) {
         "",
 
       image:
-        x.imageUrl || "",
+        x.imageUrl ||
+        "",
 
       category:
         "Shopee",
 
       sales:
-        Number(x.sales || 0),
+        Number(
+          x.sales ||
+          x.soldCount ||
+          0
+        ),
 
       commissionRate:
-        x.commissionRate || "",
+        x.commissionRate ||
+        "",
 
       shopName:
-        x.shopName || "",
+        x.shopName ||
+        "",
 
       date:
-        new Date().toLocaleString("pt-BR"),
+        new Date()
+          .toLocaleString("pt-BR"),
 
       source:
         "Shopee API"
@@ -324,12 +602,15 @@ async function iniciarAutomacao() {
     return;
   }
 
+
   automationRunning = true;
+
 
   const btn =
     document.getElementById(
       "startAutomationBtn"
     );
+
 
   const status =
     document.getElementById(
@@ -342,34 +623,20 @@ async function iniciarAutomacao() {
     btn.disabled = true;
 
     btn.textContent =
-      "⏳ AUTOMATIZANDO...";
+      "⏳ BUSCANDO OFERTAS...";
 
   }
-
-
-  if (status) {
-
-    status.textContent =
-      "🔎 Buscando ofertas na Shopee...";
-
-  }
-
-
-  const keywords = [
-
-    "fone bluetooth",
-    "air fryer",
-    "casa cozinha",
-    "moda feminina",
-    "eletrônicos"
-
-  ];
 
 
   let all = [];
 
 
   try {
+
+    /*
+      Fazemos várias buscas para aumentar
+      a variedade de produtos.
+    */
 
     for (
       let i = 0;
@@ -397,24 +664,47 @@ async function iniciarAutomacao() {
       } catch (e) {
 
         console.log(
-          "Erro nessa busca:",
+          "Falha na busca:",
+          keywords[i],
           e
         );
 
       }
 
+
+      /*
+        Pequena pausa para não disparar
+        todas as requisições ao mesmo tempo.
+      */
+
+      await new Promise(
+        resolve =>
+          setTimeout(
+            resolve,
+            150
+          )
+      );
+
     }
 
 
-    const known =
+    /*
+      Links já existentes.
+    */
+
+    const knownLinks =
       new Set(
-        offers.map(x => x.link)
+        offers.map(
+          x => x.link
+        )
       );
 
 
-    const queued =
+    const queueLinks =
       new Set(
-        queue.map(x => x.link)
+        queue.map(
+          x => x.link
+        )
       );
 
 
@@ -426,11 +716,15 @@ async function iniciarAutomacao() {
 
     for (const item of all) {
 
+      if (!item.link) {
+        continue;
+      }
+
+
       if (
-        !item.link ||
         seen.has(item.link) ||
-        known.has(item.link) ||
-        queued.has(item.link)
+        knownLinks.has(item.link) ||
+        queueLinks.has(item.link)
       ) {
 
         continue;
@@ -445,24 +739,33 @@ async function iniciarAutomacao() {
     }
 
 
+    /*
+      Primeiro os produtos com mais vendas.
+    */
+
     unique.sort(
       (a, b) =>
         b.sales - a.sales
     );
 
 
+    /*
+      Seleciona até 30 novos produtos.
+    */
+
     const selected =
-      unique.slice(0, 15);
+      unique.slice(0, 30);
 
 
     selected.forEach(
       (o, i) => {
 
         o.promo =
-          makePromo(
+          makeUniquePromo(
             o,
             offers.length + i
           );
+
 
         offers.unshift(o);
 
@@ -477,37 +780,39 @@ async function iniciarAutomacao() {
     render();
 
 
-    showPage("fila");
-
-
     if (status) {
 
       status.textContent =
         selected.length
 
-          ? `✅ Concluído: ${selected.length} ofertas selecionadas e colocadas na fila.`
+          ? `✅ ${selected.length} novas ofertas encontradas, com divulgações diferentes, e adicionadas à fila.`
 
           : "ℹ️ Nenhuma oferta nova encontrada.";
 
     }
 
 
+    showPage("fila");
+
+
   } catch (e) {
 
     console.error(e);
 
+
     if (status) {
 
       status.textContent =
-        "❌ Não foi possível concluir a automação.";
+        "❌ Não foi possível concluir a busca.";
 
     }
 
 
     alert(
-      "A automação não conseguiu concluir: " +
+      "A automação encontrou um erro: " +
       e.message
     );
+
 
   } finally {
 
@@ -523,7 +828,548 @@ async function iniciarAutomacao() {
 
     }
 
+
     render();
+
+  }
+
+}
+
+
+/* =========================
+   HORÁRIOS
+========================= */
+
+function dentroDoHorario() {
+
+  const s =
+    settings || {};
+
+
+  const agora =
+    new Date();
+
+
+  const dia =
+    agora.getDay();
+
+
+  if (
+    s.days &&
+    s.days[dia] === false
+  ) {
+
+    return false;
+
+  }
+
+
+  const atual =
+    agora.getHours() * 60 +
+    agora.getMinutes();
+
+
+  const inicioParts =
+    (s.startTime || "08:00")
+      .split(":")
+      .map(Number);
+
+
+  const fimParts =
+    (s.endTime || "22:00")
+      .split(":")
+      .map(Number);
+
+
+  const inicio =
+    inicioParts[0] * 60 +
+    inicioParts[1];
+
+
+  const fim =
+    fimParts[0] * 60 +
+    fimParts[1];
+
+
+  if (inicio <= fim) {
+
+    return (
+      atual >= inicio &&
+      atual <= fim
+    );
+
+  }
+
+
+  return (
+    atual >= inicio ||
+    atual <= fim
+  );
+
+}
+
+
+/* =========================
+   PROCESSAR FILA
+========================= */
+
+function processarProximaOferta() {
+
+  if (!queue.length) {
+
+    atualizarStatusFila(
+      "🏁 A fila está vazia."
+    );
+
+    pararControleFila();
+
+    return;
+
+  }
+
+
+  if (!dentroDoHorario()) {
+
+    atualizarStatusFila(
+      "🌙 Fora do horário de funcionamento."
+    );
+
+    return;
+
+  }
+
+
+  const oferta =
+    queue.shift();
+
+
+  oferta.publishedAt =
+    new Date()
+      .toLocaleString("pt-BR");
+
+
+  oferta.status =
+    "processada";
+
+
+  history.unshift(
+    oferta
+  );
+
+
+  save();
+
+  render();
+
+
+  atualizarStatusFila(
+    `✅ Oferta processada: ${oferta.name}`
+  );
+
+}
+
+
+/* =========================
+   CONTROLE DA FILA
+========================= */
+
+function atualizarStatusFila(texto) {
+
+  const status =
+    document.getElementById(
+      "automationStatus"
+    );
+
+  if (status) {
+    status.textContent =
+      texto;
+  }
+
+}
+
+
+function iniciarControleFila() {
+
+  pararControleFila();
+
+
+  if (
+    !settings ||
+    settings.autoPublish !== "on"
+  ) {
+
+    atualizarStatusHorario();
+
+    return;
+
+  }
+
+
+  const minutos =
+    Number(
+      settings.interval ||
+      30
+    );
+
+
+  const intervalo =
+    Math.max(
+      1,
+      minutos
+    ) *
+    60 *
+    1000;
+
+
+  if (
+    dentroDoHorario() &&
+    queue.length
+  ) {
+
+    processarProximaOferta();
+
+  }
+
+
+  queueTimer =
+    setInterval(
+      () => {
+
+        atualizarStatusHorario();
+
+
+        if (
+          dentroDoHorario() &&
+          queue.length &&
+          !automationRunning
+        ) {
+
+          processarProximaOferta();
+
+        }
+
+      },
+      intervalo
+    );
+
+}
+
+
+function pararControleFila() {
+
+  if (queueTimer) {
+
+    clearInterval(
+      queueTimer
+    );
+
+    queueTimer = null;
+
+  }
+
+}
+
+
+/* =========================
+   CONFIGURAÇÕES
+========================= */
+
+function salvarConfiguracoes() {
+
+  const startTime =
+    document.getElementById(
+      "startTime"
+    )?.value ||
+    "08:00";
+
+
+  const endTime =
+    document.getElementById(
+      "endTime"
+    )?.value ||
+    "22:00";
+
+
+  const interval =
+    Number(
+      document.getElementById(
+        "publishInterval"
+      )?.value ||
+      30
+    );
+
+
+  const autoPublish =
+    document.getElementById(
+      "autoPublish"
+    )?.value ||
+    "off";
+
+
+  const days = {
+
+    0:
+      document.getElementById(
+        "daySunday"
+      )?.checked ?? true,
+
+    1:
+      document.getElementById(
+        "dayMonday"
+      )?.checked ?? true,
+
+    2:
+      document.getElementById(
+        "dayTuesday"
+      )?.checked ?? true,
+
+    3:
+      document.getElementById(
+        "dayWednesday"
+      )?.checked ?? true,
+
+    4:
+      document.getElementById(
+        "dayThursday"
+      )?.checked ?? true,
+
+    5:
+      document.getElementById(
+        "dayFriday"
+      )?.checked ?? true,
+
+    6:
+      document.getElementById(
+        "daySaturday"
+      )?.checked ?? true
+
+  };
+
+
+  settings = {
+
+    systemName:
+      document.getElementById(
+        "systemName"
+      )?.value ||
+      "Achadinhos da Shoo",
+
+    groupLink:
+      document.getElementById(
+        "groupLink"
+      )?.value ||
+      GROUP_LINK,
+
+    inviteText:
+      document.getElementById(
+        "inviteText"
+      )?.value ||
+      INVITE_TEXT,
+
+    startTime,
+
+    endTime,
+
+    interval,
+
+    days,
+
+    autoPublish
+
+  };
+
+
+  localStorage.setItem(
+    "ads_settings",
+    JSON.stringify(settings)
+  );
+
+
+  atualizarStatusHorario();
+
+  iniciarControleFila();
+
+
+  alert(
+    "✅ Configurações salvas com sucesso!"
+  );
+
+}
+
+
+/* =========================
+   CARREGAR CONFIGURAÇÕES
+========================= */
+
+function carregarConfiguracoes() {
+
+  const start =
+    document.getElementById(
+      "startTime"
+    );
+
+
+  const end =
+    document.getElementById(
+      "endTime"
+    );
+
+
+  const interval =
+    document.getElementById(
+      "publishInterval"
+    );
+
+
+  const auto =
+    document.getElementById(
+      "autoPublish"
+    );
+
+
+  if (start) {
+
+    start.value =
+      settings.startTime ||
+      "08:00";
+
+  }
+
+
+  if (end) {
+
+    end.value =
+      settings.endTime ||
+      "22:00";
+
+  }
+
+
+  if (interval) {
+
+    interval.value =
+      settings.interval ||
+      30;
+
+  }
+
+
+  if (auto) {
+
+    auto.value =
+      settings.autoPublish ||
+      "off";
+
+  }
+
+
+  const days =
+    settings.days || {};
+
+
+  const ids = [
+
+    "daySunday",
+    "dayMonday",
+    "dayTuesday",
+    "dayWednesday",
+    "dayThursday",
+    "dayFriday",
+    "daySaturday"
+
+  ];
+
+
+  ids.forEach(
+    (id, index) => {
+
+      const el =
+        document.getElementById(id);
+
+
+      if (!el) {
+        return;
+      }
+
+
+      if (
+        Object.prototype.hasOwnProperty.call(
+          days,
+          index
+        )
+      ) {
+
+        el.checked =
+          days[index];
+
+      } else {
+
+        el.checked =
+          true;
+
+      }
+
+    }
+  );
+
+
+  atualizarStatusHorario();
+
+}
+
+
+/* =========================
+   STATUS
+========================= */
+
+function atualizarStatusHorario() {
+
+  const status =
+    document.getElementById(
+      "scheduleStatus"
+    );
+
+
+  if (!status) {
+    return;
+  }
+
+
+  const inicio =
+    settings.startTime ||
+    "08:00";
+
+
+  const fim =
+    settings.endTime ||
+    "22:00";
+
+
+  const intervalo =
+    settings.interval ||
+    30;
+
+
+  if (
+    settings.autoPublish === "on"
+  ) {
+
+    if (dentroDoHorario()) {
+
+      status.textContent =
+        `🟢 Sistema ativo: ${inicio} às ${fim}. Intervalo de ${intervalo} minutos.`;
+
+    } else {
+
+      status.textContent =
+        `🌙 Fora do horário: funcionamento das ${inicio} às ${fim}.`;
+
+    }
+
+  } else {
+
+    status.textContent =
+      `⚙️ Horário: ${inicio} às ${fim}. Publicação automática desativada.`;
 
   }
 
@@ -541,6 +1387,7 @@ function makePreview(o) {
       "preview"
     );
 
+
   if (!preview) {
     return;
   }
@@ -554,7 +1401,7 @@ function makePreview(o) {
 
        ${esc(
          o.promo ||
-         makePromo(o, 0)
+         makeUniquePromo(o, offers.length)
        ).replace(
          /\n/g,
          "<br>"
@@ -572,11 +1419,15 @@ function makePreviewById(id) {
 
   const o =
     offers.find(
-      x => String(x.id) === String(id)
+      x =>
+        String(x.id) ===
+        String(id)
     ) ||
 
     queue.find(
-      x => String(x.id) === String(id)
+      x =>
+        String(x.id) ===
+        String(id)
     );
 
 
@@ -588,7 +1439,7 @@ function makePreviewById(id) {
 
 
 /* =========================
-   SALVAR OFERTA MANUAL
+   OFERTA MANUAL
 ========================= */
 
 function saveOffer() {
@@ -655,7 +1506,8 @@ function saveOffer() {
 
   const o = {
 
-    id: Date.now(),
+    id:
+      Date.now(),
 
     name,
 
@@ -680,7 +1532,7 @@ function saveOffer() {
 
 
   o.promo =
-    makePromo(
+    makeUniquePromo(
       o,
       offers.length
     );
@@ -734,422 +1586,6 @@ function addGroup() {
 
 
 /* =========================
-   CONFIGURAÇÕES
-========================= */
-
-function salvarConfiguracoes() {
-
-  const startTime =
-    document.getElementById(
-      "startTime"
-    )?.value || "08:00";
-
-
-  const endTime =
-    document.getElementById(
-      "endTime"
-    )?.value || "22:00";
-
-
-  const interval =
-    Number(
-      document.getElementById(
-        "publishInterval"
-      )?.value || 30
-    );
-
-
-  const autoPublish =
-    document.getElementById(
-      "autoPublish"
-    )?.value || "off";
-
-
-  const days = {
-
-    0:
-      document.getElementById(
-        "daySunday"
-      )?.checked || false,
-
-    1:
-      document.getElementById(
-        "dayMonday"
-      )?.checked || false,
-
-    2:
-      document.getElementById(
-        "dayTuesday"
-      )?.checked || false,
-
-    3:
-      document.getElementById(
-        "dayWednesday"
-      )?.checked || false,
-
-    4:
-      document.getElementById(
-        "dayThursday"
-      )?.checked || false,
-
-    5:
-      document.getElementById(
-        "dayFriday"
-      )?.checked || false,
-
-    6:
-      document.getElementById(
-        "daySaturday"
-      )?.checked || false
-
-  };
-
-
-  settings = {
-
-    systemName:
-      document.getElementById(
-        "systemName"
-      )?.value ||
-      "Achadinhos da Shoo",
-
-    groupLink:
-      document.getElementById(
-        "groupLink"
-      )?.value ||
-      GROUP_LINK,
-
-    inviteText:
-      document.getElementById(
-        "inviteText"
-      )?.value ||
-      INVITE_TEXT,
-
-    startTime,
-
-    endTime,
-
-    interval,
-
-    days,
-
-    autoPublish
-
-  };
-
-
-  localStorage.setItem(
-    "ads_settings",
-    JSON.stringify(settings)
-  );
-
-
-  atualizarStatusHorario();
-
-
-  alert(
-    "✅ Configurações salvas com sucesso!"
-  );
-
-
-  iniciarControleHorario();
-
-}
-
-
-/* =========================
-   CARREGAR CONFIGURAÇÕES
-========================= */
-
-function carregarConfiguracoes() {
-
-  if (!settings) {
-    settings = {};
-  }
-
-
-  const start =
-    document.getElementById(
-      "startTime"
-    );
-
-  const end =
-    document.getElementById(
-      "endTime"
-    );
-
-  const interval =
-    document.getElementById(
-      "publishInterval"
-    );
-
-  const auto =
-    document.getElementById(
-      "autoPublish"
-    );
-
-
-  if (start) {
-    start.value =
-      settings.startTime ||
-      "08:00";
-  }
-
-
-  if (end) {
-    end.value =
-      settings.endTime ||
-      "22:00";
-  }
-
-
-  if (interval) {
-    interval.value =
-      settings.interval ||
-      30;
-  }
-
-
-  if (auto) {
-    auto.value =
-      settings.autoPublish ||
-      "off";
-  }
-
-
-  const days =
-    settings.days || {};
-
-
-  const ids = [
-
-    "daySunday",
-    "dayMonday",
-    "dayTuesday",
-    "dayWednesday",
-    "dayThursday",
-    "dayFriday",
-    "daySaturday"
-
-  ];
-
-
-  ids.forEach(
-    (id, index) => {
-
-      const el =
-        document.getElementById(id);
-
-      if (!el) {
-        return;
-      }
-
-
-      if (
-        Object.prototype.hasOwnProperty.call(
-          days,
-          index
-        )
-      ) {
-
-        el.checked =
-          days[index];
-
-      } else {
-
-        el.checked = true;
-
-      }
-
-    }
-  );
-
-
-  atualizarStatusHorario();
-
-}
-
-
-/* =========================
-   VERIFICAR HORÁRIO
-========================= */
-
-function dentroDoHorario() {
-
-  if (!settings) {
-    return false;
-  }
-
-
-  const agora =
-    new Date();
-
-
-  const dia =
-    agora.getDay();
-
-
-  if (
-    settings.days &&
-    settings.days[dia] === false
-  ) {
-
-    return false;
-
-  }
-
-
-  const horaAtual =
-    agora.getHours() * 60 +
-    agora.getMinutes();
-
-
-  const [hInicio, mInicio] =
-    (settings.startTime || "08:00")
-      .split(":")
-      .map(Number);
-
-
-  const [hFim, mFim] =
-    (settings.endTime || "22:00")
-      .split(":")
-      .map(Number);
-
-
-  const inicio =
-    hInicio * 60 + mInicio;
-
-
-  const fim =
-    hFim * 60 + mFim;
-
-
-  return (
-    horaAtual >= inicio &&
-    horaAtual <= fim
-  );
-
-}
-
-
-/* =========================
-   STATUS DOS HORÁRIOS
-========================= */
-
-function atualizarStatusHorario() {
-
-  const status =
-    document.getElementById(
-      "scheduleStatus"
-    );
-
-
-  if (!status) {
-    return;
-  }
-
-
-  if (!settings.startTime) {
-
-    status.textContent =
-      "⚪ Horários ainda não configurados.";
-
-    return;
-
-  }
-
-
-  if (
-    settings.autoPublish === "on"
-  ) {
-
-    if (dentroDoHorario()) {
-
-      status.textContent =
-        `🟢 Sistema ativo. Funcionando das ${settings.startTime} às ${settings.endTime}.`;
-
-    } else {
-
-      status.textContent =
-        `🌙 Fora do horário. Funcionamento das ${settings.startTime} às ${settings.endTime}.`;
-
-    }
-
-  } else {
-
-    status.textContent =
-      `⚙️ Horário configurado: ${settings.startTime} às ${settings.endTime}. Publicação automática desativada.`;
-
-  }
-
-}
-
-
-/* =========================
-   CONTROLE AUTOMÁTICO
-========================= */
-
-function iniciarControleHorario() {
-
-  if (scheduleTimer) {
-
-    clearInterval(
-      scheduleTimer
-    );
-
-  }
-
-
-  if (
-    !settings ||
-    settings.autoPublish !== "on"
-  ) {
-
-    atualizarStatusHorario();
-
-    return;
-
-  }
-
-
-  const intervaloMs =
-    Math.max(
-      1,
-      Number(
-        settings.interval || 30
-      )
-    ) *
-    60 *
-    1000;
-
-
-  scheduleTimer =
-    setInterval(
-      () => {
-
-        atualizarStatusHorario();
-
-
-        if (
-          dentroDoHorario() &&
-          !automationRunning
-        ) {
-
-          iniciarAutomacao();
-
-        }
-
-      },
-      intervaloMs
-    );
-
-
-  atualizarStatusHorario();
-
-}
-
-
-/* =========================
    RENDER
 ========================= */
 
@@ -1160,15 +1596,18 @@ function render() {
       "countOffers"
     );
 
+
   const countQueue =
     document.getElementById(
       "countQueue"
     );
 
+
   const countLinks =
     document.getElementById(
       "countLinks"
     );
+
 
   const countPublished =
     document.getElementById(
@@ -1283,7 +1722,8 @@ function render() {
             <button
               class="gold"
               onclick="window.open('${esc(
-                o.aff || o.link
+                o.aff ||
+                o.link
               )}','_blank')">
 
               🛒 Ver oferta
@@ -1329,8 +1769,10 @@ function render() {
 
     recent.innerHTML =
 
-      offers.slice(0, 5).map(
-        o => `
+      offers
+        .slice(0, 5)
+        .map(
+          o => `
 
         <div class="queue-item">
 
@@ -1349,7 +1791,8 @@ function render() {
         </div>
 
       `
-      ).join("")
+        )
+        .join("")
 
       ||
 
@@ -1372,8 +1815,9 @@ function render() {
 
     queueList.innerHTML =
 
-      queue.map(
-        o => `
+      queue
+        .map(
+          o => `
 
         <div class="queue-item">
 
@@ -1393,7 +1837,10 @@ function render() {
 
             ${esc(
               o.promo ||
-              makePromo(o, 0)
+              makeUniquePromo(
+                o,
+                offers.length
+              )
             ).replace(
               /\n/g,
               "<br>"
@@ -1404,7 +1851,8 @@ function render() {
         </div>
 
       `
-      ).join("")
+        )
+        .join("")
 
       ||
 
@@ -1427,8 +1875,9 @@ function render() {
 
     historyList.innerHTML =
 
-      history.map(
-        o => `
+      history
+        .map(
+          o => `
 
         <div class="history-item">
 
@@ -1439,13 +1888,18 @@ function render() {
           <br>
 
           <span class="muted">
-            ${esc(o.date)}
+            ${esc(
+              o.publishedAt ||
+              o.date ||
+              ""
+            )}
           </span>
 
         </div>
 
       `
-      ).join("")
+        )
+        .join("")
 
       ||
 
@@ -1468,8 +1922,9 @@ function render() {
 
     groupsList.innerHTML =
 
-      groups.map(
-        g => `
+      groups
+        .map(
+          g => `
 
         <div class="group">
 
@@ -1482,7 +1937,8 @@ function render() {
         </div>
 
       `
-      ).join("");
+        )
+        .join("");
 
   }
 
@@ -1490,11 +1946,11 @@ function render() {
 
 
 /* =========================
-   INICIALIZAÇÃO
+   INICIAR
 ========================= */
 
 carregarConfiguracoes();
 
 render();
 
-iniciarControleHorario();
+iniciarControleFila();
