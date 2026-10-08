@@ -9,6 +9,7 @@ let offers = JSON.parse(localStorage.getItem("ads_offers") || "[]");
 let queue = JSON.parse(localStorage.getItem("ads_queue") || "[]");
 let history = JSON.parse(localStorage.getItem("ads_history") || "[]");
 let groups = JSON.parse(localStorage.getItem("ads_groups") || "[]");
+
 let usedPromos = JSON.parse(
   localStorage.getItem("ads_used_promos") || "[]"
 );
@@ -34,6 +35,7 @@ const titles = {
   grupos: "Grupos",
   config: "Configurações"
 };
+
 
 function showPage(id) {
 
@@ -237,6 +239,7 @@ const promoOpenings = [
   "📢 ENCONTREI UMA OFERTA BEM INTERESSANTE!",
 
   "🙌 OLHA ESSA OPORTUNIDADE!"
+
 ];
 
 
@@ -271,6 +274,7 @@ const promoMiddle = [
   "Vale a pena conferir as condições da oferta 💸",
 
   "O preço encontrado foi esse, mas pode mudar a qualquer momento ⏰"
+
 ];
 
 
@@ -295,6 +299,7 @@ const promoClosings = [
   "⚡ Confira agora",
 
   "👇 Link da oferta"
+
 ];
 
 
@@ -324,17 +329,6 @@ function makeUniquePromo(o, index = 0) {
   const base =
     hashNumber(seed);
 
-
-  /*
-    Criamos muitas combinações:
-
-    20 aberturas
-    15 frases intermediárias
-    10 fechamentos
-
-    = até 3.000 combinações.
-  */
-
   let openingIndex =
     base % promoOpenings.length;
 
@@ -346,11 +340,14 @@ function makeUniquePromo(o, index = 0) {
     Math.floor(base / 13) %
     promoClosings.length;
 
-
   let promo = "";
 
 
-  for (let tentativa = 0; tentativa < 300; tentativa++) {
+  for (
+    let tentativa = 0;
+    tentativa < 300;
+    tentativa++
+  ) {
 
     const oi =
       (openingIndex + tentativa) %
@@ -388,14 +385,12 @@ ${GROUP_LINK}`;
 
   usedPromos.push(promo);
 
-  /*
-    Mantém o histórico de textos sem
-    deixar o localStorage crescer demais.
-  */
 
   if (usedPromos.length > 3000) {
+
     usedPromos =
       usedPromos.slice(-2500);
+
   }
 
 
@@ -623,157 +618,162 @@ async function iniciarAutomacao() {
     btn.disabled = true;
 
     btn.textContent =
-      "⏳ BUSCANDO OFERTAS...";
+      "⏳ PESQUISANDO...";
 
   }
-
-
-  let all = [];
 
 
   try {
 
     /*
-      Fazemos várias buscas para aumentar
-      a variedade de produtos.
+      Escolhe uma categoria aleatória.
     */
 
-    for (
-      let i = 0;
-      i < keywords.length;
-      i++
-    ) {
-
-      if (status) {
-
-        status.textContent =
-          `🔎 Buscando ${i + 1}/${keywords.length}: ${keywords[i]}...`;
-
-      }
+    const keyword =
+      keywords[
+        Math.floor(
+          Math.random() *
+          keywords.length
+        )
+      ];
 
 
-      try {
+    if (status) {
 
-        const result =
-          await buscarOfertas(
-            keywords[i]
-          );
+      status.textContent =
+        `🔎 Procurando ofertas de "${keyword}"...`;
 
-        all.push(...result);
-
-      } catch (e) {
-
-        console.log(
-          "Falha na busca:",
-          keywords[i],
-          e
-        );
-
-      }
+    }
 
 
-      /*
-        Pequena pausa para não disparar
-        todas as requisições ao mesmo tempo.
-      */
+    /* =========================
+       BUSCAR NA SHOPEE
+    ========================= */
 
-      await new Promise(
-        resolve =>
-          setTimeout(
-            resolve,
-            150
+    const produtos =
+      await buscarOfertas(keyword);
+
+
+    if (!produtos.length) {
+
+      throw new Error(
+        "Nenhuma oferta encontrada para essa busca."
+      );
+
+    }
+
+
+    /*
+      Produtos com mais vendas primeiro.
+    */
+
+    produtos.sort(
+      (a, b) =>
+        Number(b.sales || 0) -
+        Number(a.sales || 0)
+    );
+
+
+    /*
+      Procura um produto que ainda
+      não esteja cadastrado.
+    */
+
+    const o =
+      produtos.find(
+        x =>
+          x.link &&
+          !offers.some(
+            o => o.link === x.link
+          ) &&
+          !queue.some(
+            o => o.link === x.link
           )
       );
 
-    }
 
+    if (!o) {
 
-    /*
-      Links já existentes.
-    */
-
-    const knownLinks =
-      new Set(
-        offers.map(
-          x => x.link
-        )
+      throw new Error(
+        "Os produtos encontrados já estavam cadastrados."
       );
-
-
-    const queueLinks =
-      new Set(
-        queue.map(
-          x => x.link
-        )
-      );
-
-
-    const unique = [];
-
-    const seen =
-      new Set();
-
-
-    for (const item of all) {
-
-      if (!item.link) {
-        continue;
-      }
-
-
-      if (
-        seen.has(item.link) ||
-        knownLinks.has(item.link) ||
-        queueLinks.has(item.link)
-      ) {
-
-        continue;
-
-      }
-
-
-      seen.add(item.link);
-
-      unique.push(item);
 
     }
 
 
-    /*
-      Primeiro os produtos com mais vendas.
-    */
+    /* =========================
+       CRIAR DIVULGAÇÃO
+    ========================= */
 
-    unique.sort(
-      (a, b) =>
-        b.sales - a.sales
-    );
-
-
-    /*
-      Seleciona até 30 novos produtos.
-    */
-
-    const selected =
-      unique.slice(0, 30);
+    o.promo =
+      makeUniquePromo(
+        o,
+        offers.length
+      );
 
 
-    selected.forEach(
-      (o, i) => {
+    /* =========================
+       SALVAR NO SITE
+    ========================= */
 
-        o.promo =
-          makeUniquePromo(
-            o,
-            offers.length + i
-          );
+    offers.unshift(o);
+
+    save();
+
+    render();
 
 
-        offers.unshift(o);
+    /* =========================
+       ENVIAR PARA WHATSAPP
+    ========================= */
 
-        queue.push(o);
+    if (status) {
 
-      }
-    );
+      status.textContent =
+        "📲 Enviando a oferta para seu WhatsApp...";
 
+    }
+
+
+    const whatsappResponse =
+      await fetch(
+        `${API_URL}/enviar-whatsapp`,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
+
+          body:
+            JSON.stringify({
+              message: o.promo
+            })
+        }
+      );
+
+
+    const whatsappData =
+      await whatsappResponse.json();
+
+
+    if (!whatsappResponse.ok) {
+
+      throw new Error(
+        whatsappData.erro ||
+        whatsappData.error ||
+        "Não foi possível enviar para o WhatsApp."
+      );
+
+    }
+
+
+    /* =========================
+       COLOCAR NA FILA
+    ========================= */
+
+    queue.push(o);
 
     save();
 
@@ -783,16 +783,14 @@ async function iniciarAutomacao() {
     if (status) {
 
       status.textContent =
-        selected.length
-
-          ? `✅ ${selected.length} novas ofertas encontradas, com divulgações diferentes, e adicionadas à fila.`
-
-          : "ℹ️ Nenhuma oferta nova encontrada.";
+        `✅ Oferta encontrada e enviada para seu WhatsApp: ${o.name}`;
 
     }
 
 
-    showPage("fila");
+    alert(
+      "✅ Oferta criada e enviada para o seu WhatsApp!"
+    );
 
 
   } catch (e) {
@@ -803,13 +801,13 @@ async function iniciarAutomacao() {
     if (status) {
 
       status.textContent =
-        "❌ Não foi possível concluir a busca.";
+        "❌ Não foi possível concluir a automação.";
 
     }
 
 
     alert(
-      "A automação encontrou um erro: " +
+      "A automação encontrou um erro:\n\n" +
       e.message
     );
 
@@ -845,10 +843,8 @@ function dentroDoHorario() {
   const s =
     settings || {};
 
-
   const agora =
     new Date();
-
 
   const dia =
     agora.getDay();
