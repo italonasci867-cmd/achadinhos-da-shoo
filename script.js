@@ -36,7 +36,6 @@ const titles = {
   config: "Configurações"
 };
 
-
 function showPage(id) {
 
   document
@@ -75,7 +74,6 @@ function showPage(id) {
     sidebar.classList.remove("open");
   }
 }
-
 
 document
   .querySelectorAll(".nav")
@@ -321,6 +319,10 @@ function hashNumber(text) {
 }
 
 
+/* =========================
+   GERAR TEXTO DA OFERTA
+========================= */
+
 function makeUniquePromo(o, index = 0) {
 
   const seed =
@@ -342,7 +344,6 @@ function makeUniquePromo(o, index = 0) {
 
   let promo = "";
 
-
   for (
     let tentativa = 0;
     tentativa < 300;
@@ -361,6 +362,9 @@ function makeUniquePromo(o, index = 0) {
       (closingIndex + tentativa * 5) %
       promoClosings.length;
 
+    const linkFinal =
+      o.aff ||
+      o.link;
 
     promo = `${promoOpenings[oi]}
 
@@ -370,21 +374,17 @@ function makeUniquePromo(o, index = 0) {
 ${promoMiddle[mi]}
 
 ${promoClosings[ci]}:
-${o.aff || o.link}
+${linkFinal}
 
 👥 ${INVITE_TEXT}
 ${GROUP_LINK}`;
 
-
     if (!usedPromos.includes(promo)) {
       break;
     }
-
   }
 
-
   usedPromos.push(promo);
-
 
   if (usedPromos.length > 3000) {
 
@@ -393,8 +393,137 @@ ${GROUP_LINK}`;
 
   }
 
-
   return promo;
+}
+
+
+/* =========================
+   COPIAR OFERTA
+========================= */
+
+async function copiarOferta(id) {
+
+  const o =
+    offers.find(
+      x => String(x.id) === String(id)
+    ) ||
+    queue.find(
+      x => String(x.id) === String(id)
+    ) ||
+    history.find(
+      x => String(x.id) === String(id)
+    );
+
+  if (!o) {
+
+    alert("Oferta não encontrada.");
+
+    return;
+
+  }
+
+
+  /*
+    Se a oferta ainda não tiver
+    divulgação, cria automaticamente.
+  */
+
+  if (!o.promo) {
+
+    o.promo =
+      makeUniquePromo(
+        o,
+        offers.length
+      );
+
+    save();
+
+  }
+
+
+  const texto =
+    o.promo;
+
+
+  try {
+
+    await navigator.clipboard.writeText(texto);
+
+    mostrarMensagemCopiado(id);
+
+  } catch (error) {
+
+    /*
+      Método alternativo para celulares
+      caso o navegador bloqueie clipboard.
+    */
+
+    const textarea =
+      document.createElement("textarea");
+
+    textarea.value = texto;
+
+    textarea.style.position = "fixed";
+    textarea.style.left = "-9999px";
+
+    document.body.appendChild(textarea);
+
+    textarea.focus();
+    textarea.select();
+
+    try {
+
+      document.execCommand("copy");
+
+      mostrarMensagemCopiado(id);
+
+    } catch (e) {
+
+      alert(
+        "Não foi possível copiar automaticamente. Tente novamente."
+      );
+
+    }
+
+    document.body.removeChild(textarea);
+
+  }
+
+}
+
+
+/* =========================
+   AVISO DE COPIADO
+========================= */
+
+function mostrarMensagemCopiado(id) {
+
+  const botoes =
+    document.querySelectorAll(
+      `[data-copy-id="${id}"]`
+    );
+
+  botoes.forEach(botao => {
+
+    const textoOriginal =
+      botao.innerHTML;
+
+    botao.innerHTML =
+      "✅ COPIADO!";
+
+    botao.disabled = true;
+
+    setTimeout(() => {
+
+      botao.innerHTML =
+        textoOriginal;
+
+      botao.disabled = false;
+
+    }, 1800);
+
+  });
+
 }
 
 
@@ -500,10 +629,8 @@ async function buscarOfertas(keyword) {
       `${API_URL}/buscar-ofertas?q=${encodeURIComponent(keyword)}`
     );
 
-
   const data =
     await response.json();
-
 
   if (!response.ok) {
 
@@ -513,7 +640,6 @@ async function buscarOfertas(keyword) {
     );
 
   }
-
 
   return (
     data.data?.productOfferV2?.nodes ||
@@ -597,21 +723,17 @@ async function iniciarAutomacao() {
     return;
   }
 
-
   automationRunning = true;
-
 
   const btn =
     document.getElementById(
       "startAutomationBtn"
     );
 
-
   const status =
     document.getElementById(
       "automationStatus"
     );
-
 
   if (btn) {
 
@@ -622,12 +744,7 @@ async function iniciarAutomacao() {
 
   }
 
-
   try {
-
-    /*
-      Escolhe uma categoria aleatória.
-    */
 
     const keyword =
       keywords[
@@ -636,7 +753,6 @@ async function iniciarAutomacao() {
           keywords.length
         )
       ];
-
 
     if (status) {
 
@@ -663,10 +779,6 @@ async function iniciarAutomacao() {
     }
 
 
-    /*
-      Produtos com mais vendas primeiro.
-    */
-
     produtos.sort(
       (a, b) =>
         Number(b.sales || 0) -
@@ -675,8 +787,7 @@ async function iniciarAutomacao() {
 
 
     /*
-      Procura um produto que ainda
-      não esteja cadastrado.
+      Procura um produto novo.
     */
 
     const o =
@@ -702,7 +813,7 @@ async function iniciarAutomacao() {
 
 
     /* =========================
-       CRIAR DIVULGAÇÃO
+       GERAR DIVULGAÇÃO
     ========================= */
 
     o.promo =
@@ -713,65 +824,10 @@ async function iniciarAutomacao() {
 
 
     /* =========================
-       SALVAR NO SITE
+       SALVAR
     ========================= */
 
     offers.unshift(o);
-
-    save();
-
-    render();
-
-
-    /* =========================
-       ENVIAR PARA WHATSAPP
-    ========================= */
-
-    if (status) {
-
-      status.textContent =
-        "📲 Enviando a oferta para seu WhatsApp...";
-
-    }
-
-
-    const whatsappResponse =
-      await fetch(
-        `${API_URL}/enviar-whatsapp`,
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type":
-              "application/json"
-          },
-
-          body:
-            JSON.stringify({
-              message: o.promo
-            })
-        }
-      );
-
-
-    const whatsappData =
-      await whatsappResponse.json();
-
-
-    if (!whatsappResponse.ok) {
-
-      throw new Error(
-        whatsappData.erro ||
-        whatsappData.error ||
-        "Não foi possível enviar para o WhatsApp."
-      );
-
-    }
-
-
-    /* =========================
-       COLOCAR NA FILA
-    ========================= */
 
     queue.push(o);
 
@@ -783,13 +839,13 @@ async function iniciarAutomacao() {
     if (status) {
 
       status.textContent =
-        `✅ Oferta encontrada e enviada para seu WhatsApp: ${o.name}`;
+        `✅ Oferta encontrada e divulgação gerada: ${o.name}`;
 
     }
 
 
     alert(
-      "✅ Oferta criada e enviada para o seu WhatsApp!"
+      "✅ Oferta encontrada!\n\nA divulgação foi gerada e já está pronta para copiar."
     );
 
 
@@ -797,25 +853,21 @@ async function iniciarAutomacao() {
 
     console.error(e);
 
-
     if (status) {
 
       status.textContent =
-        "❌ Não foi possível concluir a automação.";
+        "❌ Não foi possível concluir a busca.";
 
     }
 
-
     alert(
-      "A automação encontrou um erro:\n\n" +
+      "A busca encontrou um erro:\n\n" +
       e.message
     );
-
 
   } finally {
 
     automationRunning = false;
-
 
     if (btn) {
 
@@ -825,7 +877,6 @@ async function iniciarAutomacao() {
         "▶️ INICIAR AUTOMAÇÃO";
 
     }
-
 
     render();
 
@@ -849,7 +900,6 @@ function dentroDoHorario() {
   const dia =
     agora.getDay();
 
-
   if (
     s.days &&
     s.days[dia] === false
@@ -859,33 +909,27 @@ function dentroDoHorario() {
 
   }
 
-
   const atual =
     agora.getHours() * 60 +
     agora.getMinutes();
-
 
   const inicioParts =
     (s.startTime || "08:00")
       .split(":")
       .map(Number);
 
-
   const fimParts =
     (s.endTime || "22:00")
       .split(":")
       .map(Number);
 
-
   const inicio =
     inicioParts[0] * 60 +
     inicioParts[1];
 
-
   const fim =
     fimParts[0] * 60 +
     fimParts[1];
-
 
   if (inicio <= fim) {
 
@@ -895,7 +939,6 @@ function dentroDoHorario() {
     );
 
   }
-
 
   return (
     atual >= inicio ||
@@ -923,7 +966,6 @@ function processarProximaOferta() {
 
   }
 
-
   if (!dentroDoHorario()) {
 
     atualizarStatusFila(
@@ -934,29 +976,23 @@ function processarProximaOferta() {
 
   }
 
-
   const oferta =
     queue.shift();
-
 
   oferta.publishedAt =
     new Date()
       .toLocaleString("pt-BR");
 
-
   oferta.status =
     "processada";
-
 
   history.unshift(
     oferta
   );
 
-
   save();
 
   render();
-
 
   atualizarStatusFila(
     `✅ Oferta processada: ${oferta.name}`
@@ -988,7 +1024,6 @@ function iniciarControleFila() {
 
   pararControleFila();
 
-
   if (
     !settings ||
     settings.autoPublish !== "on"
@@ -1000,13 +1035,11 @@ function iniciarControleFila() {
 
   }
 
-
   const minutos =
     Number(
       settings.interval ||
       30
     );
-
 
   const intervalo =
     Math.max(
@@ -1015,7 +1048,6 @@ function iniciarControleFila() {
     ) *
     60 *
     1000;
-
 
   if (
     dentroDoHorario() &&
@@ -1026,13 +1058,11 @@ function iniciarControleFila() {
 
   }
 
-
   queueTimer =
     setInterval(
       () => {
 
         atualizarStatusHorario();
-
 
         if (
           dentroDoHorario() &&
@@ -1078,13 +1108,11 @@ function salvarConfiguracoes() {
     )?.value ||
     "08:00";
 
-
   const endTime =
     document.getElementById(
       "endTime"
     )?.value ||
     "22:00";
-
 
   const interval =
     Number(
@@ -1094,13 +1122,11 @@ function salvarConfiguracoes() {
       30
     );
 
-
   const autoPublish =
     document.getElementById(
       "autoPublish"
     )?.value ||
     "off";
-
 
   const days = {
 
@@ -1141,7 +1167,6 @@ function salvarConfiguracoes() {
 
   };
 
-
   settings = {
 
     systemName:
@@ -1174,17 +1199,14 @@ function salvarConfiguracoes() {
 
   };
 
-
   localStorage.setItem(
     "ads_settings",
     JSON.stringify(settings)
   );
 
-
   atualizarStatusHorario();
 
   iniciarControleFila();
-
 
   alert(
     "✅ Configurações salvas com sucesso!"
@@ -1204,24 +1226,20 @@ function carregarConfiguracoes() {
       "startTime"
     );
 
-
   const end =
     document.getElementById(
       "endTime"
     );
-
 
   const interval =
     document.getElementById(
       "publishInterval"
     );
 
-
   const auto =
     document.getElementById(
       "autoPublish"
     );
-
 
   if (start) {
 
@@ -1231,7 +1249,6 @@ function carregarConfiguracoes() {
 
   }
 
-
   if (end) {
 
     end.value =
@@ -1239,7 +1256,6 @@ function carregarConfiguracoes() {
       "22:00";
 
   }
-
 
   if (interval) {
 
@@ -1249,7 +1265,6 @@ function carregarConfiguracoes() {
 
   }
 
-
   if (auto) {
 
     auto.value =
@@ -1258,10 +1273,8 @@ function carregarConfiguracoes() {
 
   }
 
-
   const days =
     settings.days || {};
-
 
   const ids = [
 
@@ -1275,18 +1288,15 @@ function carregarConfiguracoes() {
 
   ];
 
-
   ids.forEach(
     (id, index) => {
 
       const el =
         document.getElementById(id);
 
-
       if (!el) {
         return;
       }
-
 
       if (
         Object.prototype.hasOwnProperty.call(
@@ -1308,7 +1318,6 @@ function carregarConfiguracoes() {
     }
   );
 
-
   atualizarStatusHorario();
 
 }
@@ -1325,26 +1334,21 @@ function atualizarStatusHorario() {
       "scheduleStatus"
     );
 
-
   if (!status) {
     return;
   }
-
 
   const inicio =
     settings.startTime ||
     "08:00";
 
-
   const fim =
     settings.endTime ||
     "22:00";
 
-
   const intervalo =
     settings.interval ||
     30;
-
 
   if (
     settings.autoPublish === "on"
@@ -1383,28 +1387,43 @@ function makePreview(o) {
       "preview"
     );
 
-
   if (!preview) {
     return;
   }
 
+  if (!o.promo) {
+
+    o.promo =
+      makeUniquePromo(
+        o,
+        offers.length
+      );
+
+    save();
+
+  }
 
   preview.innerHTML =
 
-    `<h3>Prévia da divulgação</h3>
+    `<h3>📝 Texto gerado</h3>
 
      <div class="preview-box">
 
-       ${esc(
-         o.promo ||
-         makeUniquePromo(o, offers.length)
-       ).replace(
+       ${esc(o.promo).replace(
          /\n/g,
          "<br>"
        )}
 
-     </div>`;
+     </div>
 
+     <button
+       class="primary"
+       data-copy-id="${esc(o.id)}"
+       onclick="copiarOferta('${esc(o.id)}')">
+
+       📋 COPIAR OFERTA
+
+     </button>`;
 
   showPage("criar");
 
@@ -1426,7 +1445,6 @@ function makePreviewById(id) {
         String(id)
     );
 
-
   if (o) {
     makePreview(o);
   }
@@ -1447,13 +1465,11 @@ function saveOffer() {
       .trim() ||
     "Produto da Shopee";
 
-
   const price =
     document
       .getElementById("price")
       .value
       .trim();
-
 
   const old =
     document
@@ -1461,20 +1477,17 @@ function saveOffer() {
       .value
       .trim();
 
-
   const link =
     document
       .getElementById("productLink")
       .value
       .trim();
 
-
   const aff =
     document
       .getElementById("affiliateLink")
       .value
       .trim();
-
 
   if (!price || !link) {
 
@@ -1485,7 +1498,6 @@ function saveOffer() {
     return;
 
   }
-
 
   if (
     !/^https?:\/\//i.test(link)
@@ -1498,7 +1510,6 @@ function saveOffer() {
     return;
 
   }
-
 
   const o = {
 
@@ -1526,18 +1537,15 @@ function saveOffer() {
 
   };
 
-
   o.promo =
     makeUniquePromo(
       o,
       offers.length
     );
 
-
   offers.unshift(o);
 
   queue.push(o);
-
 
   save();
 
@@ -1559,20 +1567,16 @@ function addGroup() {
       "groupName"
     );
 
-
   const n =
     input.value.trim();
-
 
   if (!n) {
     return;
   }
 
-
   groups.push(n);
 
   input.value = "";
-
 
   save();
 
@@ -1592,36 +1596,30 @@ function render() {
       "countOffers"
     );
 
-
   const countQueue =
     document.getElementById(
       "countQueue"
     );
-
 
   const countLinks =
     document.getElementById(
       "countLinks"
     );
 
-
   const countPublished =
     document.getElementById(
       "countPublished"
     );
-
 
   if (countOffers) {
     countOffers.textContent =
       offers.length;
   }
 
-
   if (countQueue) {
     countQueue.textContent =
       queue.length;
   }
-
 
   if (countLinks) {
 
@@ -1632,7 +1630,6 @@ function render() {
 
   }
 
-
   if (countPublished) {
 
     countPublished.textContent =
@@ -1641,13 +1638,14 @@ function render() {
   }
 
 
-  /* OFERTAS */
+  /* =========================
+     OFERTAS
+  ========================= */
 
   const list =
     document.getElementById(
       "offersList"
     );
-
 
   if (list) {
 
@@ -1733,7 +1731,17 @@ function render() {
                 o.id
               )}')">
 
-              ✍️ Divulgação
+              📝 Texto gerado
+
+            </button>
+
+
+            <button
+              class="primary"
+              data-copy-id="${esc(o.id)}"
+              onclick="copiarOferta('${esc(o.id)}')">
+
+              📋 COPIAR OFERTA
 
             </button>
 
@@ -1753,13 +1761,14 @@ function render() {
   }
 
 
-  /* RECENTES */
+  /* =========================
+     RECENTES
+  ========================= */
 
   const recent =
     document.getElementById(
       "recentOffers"
     );
-
 
   if (recent) {
 
@@ -1799,13 +1808,14 @@ function render() {
   }
 
 
-  /* FILA */
+  /* =========================
+     FILA
+  ========================= */
 
   const queueList =
     document.getElementById(
       "queueList"
     );
-
 
   if (queueList) {
 
@@ -1833,16 +1843,23 @@ function render() {
 
             ${esc(
               o.promo ||
-              makeUniquePromo(
-                o,
-                offers.length
-              )
+              ""
             ).replace(
               /\n/g,
               "<br>"
             )}
 
           </div>
+
+
+          <button
+            class="primary"
+            data-copy-id="${esc(o.id)}"
+            onclick="copiarOferta('${esc(o.id)}')">
+
+            📋 COPIAR OFERTA
+
+          </button>
 
         </div>
 
@@ -1859,13 +1876,14 @@ function render() {
   }
 
 
-  /* HISTÓRICO */
+  /* =========================
+     HISTÓRICO
+  ========================= */
 
   const historyList =
     document.getElementById(
       "historyList"
     );
-
 
   if (historyList) {
 
@@ -1906,13 +1924,14 @@ function render() {
   }
 
 
-  /* GRUPOS */
+  /* =========================
+     GRUPOS
+  ========================= */
 
   const groupsList =
     document.getElementById(
       "groupsList"
     );
-
 
   if (groupsList) {
 
