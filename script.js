@@ -2176,6 +2176,48 @@ async function gerarVideoPromocional() {
 
 
 /* =========================
+   EVENTOS DO CATÁLOGO E ESTÚDIO
+========================= */
+function conectarBotoesCatalogoEstudio() {
+  const searchButton = document.getElementById("catalogSearchBtn");
+  const queryInput = document.getElementById("catalogQuery");
+  const previewButton = document.querySelector("#estudio .studio-controls .primary");
+  const videoButton = document.getElementById("downloadVideoBtn");
+
+  if (searchButton) {
+    searchButton.addEventListener("click", event => {
+      event.preventDefault();
+      pesquisarCatalogo();
+    });
+  }
+
+  if (queryInput) {
+    queryInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        pesquisarCatalogo();
+      }
+    });
+  }
+
+  if (previewButton) {
+    previewButton.addEventListener("click", event => {
+      event.preventDefault();
+      atualizarPreviewVideo();
+    });
+  }
+
+  if (videoButton) {
+    videoButton.addEventListener("click", event => {
+      event.preventDefault();
+      gerarVideoPromocional();
+    });
+  }
+}
+
+conectarBotoesCatalogoEstudio();
+
+/* =========================
    INICIAR
 ========================= */
 
