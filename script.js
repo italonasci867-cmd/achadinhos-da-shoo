@@ -29,6 +29,8 @@ let queueTimer = null;
 const titles = {
   inicio: "Início",
   ofertas: "Ofertas",
+  catalogo: "Catálogo Shopee",
+  estudio: "Estúdio de vídeos",
   criar: "Criar divulgação",
   fila: "Fila de publicação",
   historico: "Histórico",
@@ -1957,6 +1959,219 @@ function render() {
 
   }
 
+}
+
+
+
+/* =========================
+   CATÁLOGO E ESTÚDIO DE VÍDEOS
+========================= */
+let catalogProducts = [];
+let studioProduct = null;
+let studioImage = null;
+
+function setCatalogStatus(message) {
+  const el = document.getElementById("catalogStatus");
+  if (el) el.textContent = message;
+}
+
+async function pesquisarCatalogo() {
+  const input = document.getElementById("catalogQuery");
+  const query = (input?.value || "").trim();
+  const btn = document.getElementById("catalogSearchBtn");
+  const results = document.getElementById("catalogResults");
+  if (!query) {
+    setCatalogStatus("Digite o nome de um produto para pesquisar.");
+    input?.focus();
+    return;
+  }
+  if (btn) { btn.disabled = true; btn.textContent = "⏳ Pesquisando..."; }
+  setCatalogStatus("🔎 Consultando a integração de ofertas da Shopee...");
+  if (results) results.innerHTML = '<div class="empty">Buscando produtos...</div>';
+  try {
+    const products = await buscarOfertas(query);
+    catalogProducts = products;
+    if (!products.length) {
+      if (results) results.innerHTML = '<div class="empty">Nenhum produto retornou nessa busca. Tente outro termo.</div>';
+      setCatalogStatus("Nenhum produto encontrado para essa pesquisa.");
+      return;
+    }
+    if (results) results.innerHTML = products.map((p, i) => `
+      <article class="catalog-card">
+        <div class="catalog-image">${p.image ? `<img src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy" onerror="this.style.display='none';this.parentElement.classList.add('no-image')">` : '<span>🛍️</span>'}</div>
+        <div class="catalog-card-body">
+          <span class="tag">SHOPEE</span>
+          <h3>${esc(p.name)}</h3>
+          <div class="price">${esc(p.price)}</div>
+          <p class="muted">${p.sales ? '🔥 ' + Number(p.sales).toLocaleString('pt-BR') + ' vendidos' : 'Achadinho encontrado'}</p>
+          <div class="catalog-actions">
+            <button class="gold" onclick="selecionarProdutoCatalogo(${i})">🎬 Criar vídeo</button>
+            <button class="secondary-btn" onclick="abrirLinkCatalogo(${i})">Ver produto ↗</button>
+          </div>
+        </div>
+      </article>`).join("");
+    setCatalogStatus(`✅ ${products.length} produto(s) encontrado(s). Escolha um para criar o vídeo.`);
+  } catch (error) {
+    console.error(error);
+    if (results) results.innerHTML = '<div class="empty">Não foi possível carregar os resultados.</div>';
+    setCatalogStatus("❌ A busca falhou: " + (error.message || "verifique a conexão da API."));
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "🔎 Buscar produtos"; }
+  }
+}
+
+function abrirLinkCatalogo(index) {
+  const p = catalogProducts[index];
+  const url = p && (p.aff || p.link);
+  if (url && /^https?:\/\//i.test(url)) window.open(url, "_blank", "noopener");
+  else alert("Esse produto não tem um link disponível.");
+}
+
+function selecionarProdutoCatalogo(index) {
+  const p = catalogProducts[index];
+  if (!p) return;
+  studioProduct = { ...p };
+  studioImage = null;
+  const info = document.getElementById("studioProductInfo");
+  if (info) info.className = "selected-product";
+  if (info) info.innerHTML = `
+    <div class="selected-product-row">
+      ${p.image ? `<img src="${esc(p.image)}" alt="">` : '<span class="selected-emoji">🛍️</span>'}
+      <div><strong>${esc(p.name)}</strong><div class="price">${esc(p.price)}</div><small>Produto selecionado</small></div>
+    </div>`;
+  if (p.image) {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => { studioImage = img; atualizarPreviewVideo(); };
+    img.onerror = () => { studioImage = null; atualizarPreviewVideo(); };
+    img.src = p.image;
+  }
+  const status = document.getElementById("videoStatus");
+  if (status) status.textContent = "Produto selecionado. Personalize os textos e gere seu vídeo.";
+  showPage("estudio");
+  atualizarPreviewVideo();
+}
+
+function desenharArtePromocional(ctx, frame, elapsed, total) {
+  const w = 360, h = 640;
+  const p = studioProduct || {};
+  const headline = (document.getElementById("studioHeadline")?.value || "ACHADINHO IMPERDÍVEL").trim().toUpperCase();
+  const subtitle = (document.getElementById("studioSubtitle")?.value || "Confira essa oferta").trim();
+  const price = String(p.price || "Confira o preço");
+  const pulse = 1 + Math.sin(elapsed * 3) * 0.018;
+  const grad = ctx.createLinearGradient(0, 0, w, h);
+  grad.addColorStop(0, "#17130a"); grad.addColorStop(.55, "#08090c"); grad.addColorStop(1, "#30230a");
+  ctx.fillStyle = grad; ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = "#d4af37"; ctx.globalAlpha = .12;
+  ctx.beginPath(); ctx.arc(320, 70, 120 + Math.sin(elapsed * 2) * 8, 0, Math.PI * 2); ctx.fill();
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = "#d4af37"; ctx.fillRect(24, 28, 42, 4);
+  ctx.fillStyle = "#f7d978"; ctx.font = "bold 13px Arial"; ctx.fillText("ACHADINHOS DA SHOO", 24, 55);
+  ctx.fillStyle = "#ffffff"; ctx.font = "900 27px Arial";
+  const words = headline.split(/\s+/); let line = "", y = 102;
+  for (const word of words) {
+    const test = line ? line + " " + word : word;
+    if (ctx.measureText(test).width > 310 && line) { ctx.fillText(line, 24, y); y += 32; line = word; }
+    else line = test;
+  }
+  if (line && y < 178) ctx.fillText(line, 24, y);
+  const cardY = 190;
+  ctx.fillStyle = "#ffffff"; ctx.beginPath(); ctx.roundRect(24, cardY, 312, 242, 20); ctx.fill();
+  if (studioImage) {
+    try {
+      const img = studioImage;
+      const scale = Math.min(280 / img.width, 210 / img.height);
+      const iw = img.width * scale, ih = img.height * scale;
+      ctx.drawImage(img, 180 - iw / 2, cardY + 16 + (210 - ih) / 2, iw, ih);
+    } catch (e) { desenharIconeProduto(ctx, cardY); }
+  } else desenharIconeProduto(ctx, cardY);
+  ctx.fillStyle = "#f7d978"; ctx.font = "bold 12px Arial"; ctx.fillText("OFERTA EM DESTAQUE", 24, 464);
+  ctx.fillStyle = "#fff"; ctx.font = "bold 17px Arial";
+  const name = String(p.name || "Seu produto").slice(0, 56);
+  const nameLines = name.match(/.{1,34}(?:\s|$)|.{1,34}/g) || [name];
+  ctx.fillText(nameLines[0].trim(), 24, 490);
+  if (nameLines[1]) ctx.fillText(nameLines[1].trim(), 24, 512);
+  ctx.save(); ctx.translate(180, 550); ctx.scale(pulse, pulse);
+  ctx.fillStyle = "#d4af37"; ctx.beginPath(); ctx.roundRect(-156, -26, 312, 52, 14); ctx.fill();
+  ctx.fillStyle = "#111"; ctx.font = "900 25px Arial"; ctx.textAlign = "center"; ctx.fillText(price, 0, 8); ctx.restore();
+  ctx.fillStyle = "#dedede"; ctx.font = "13px Arial"; ctx.textAlign = "center";
+  ctx.fillText(subtitle.slice(0, 44), 180, 594);
+  ctx.fillStyle = "#a7a7a7"; ctx.font = "10px Arial"; ctx.fillText("CONFIRA OS DETALHES NO LINK DO PRODUTO", 180, 619);
+  ctx.textAlign = "left";
+}
+
+function desenharIconeProduto(ctx, y) {
+  ctx.fillStyle = "#f5f0df"; ctx.beginPath(); ctx.arc(180, y + 120, 66, 0, Math.PI * 2); ctx.fill();
+  ctx.font = "64px Arial"; ctx.textAlign = "center"; ctx.fillStyle = "#30230a"; ctx.fillText("🛍️", 180, y + 143); ctx.textAlign = "left";
+}
+
+function atualizarPreviewVideo() {
+  const canvas = document.getElementById("promoCanvas");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  desenharArtePromocional(ctx, 0, 1.5, 12);
+  const status = document.getElementById("videoStatus");
+  if (status && studioProduct) status.textContent = "Prévia atualizada. Toque em “Gerar e baixar vídeo” para exportar.";
+}
+
+async function gerarVideoPromocional() {
+  const canvas = document.getElementById("promoCanvas");
+  const btn = document.getElementById("downloadVideoBtn");
+  const status = document.getElementById("videoStatus");
+  if (!studioProduct) {
+    if (status) status.textContent = "Escolha primeiro um produto no Catálogo Shopee.";
+    showPage("catalogo");
+    return;
+  }
+  if (!canvas || !canvas.captureStream || !window.MediaRecorder) {
+    if (status) status.textContent = "Seu navegador não oferece gravação de vídeo por este recurso. Tente abrir o site no Chrome atualizado.";
+    return;
+  }
+  const seconds = Number(document.getElementById("studioDuration")?.value || 12);
+  const stream = canvas.captureStream(24);
+  let recorder;
+  let chunks = [];
+  try {
+    const mime = ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"].find(t => MediaRecorder.isTypeSupported(t));
+    recorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+  } catch (e) {
+    stream.getTracks().forEach(t => t.stop());
+    if (status) status.textContent = "Não foi possível iniciar o gerador de vídeo neste navegador.";
+    return;
+  }
+  if (btn) { btn.disabled = true; btn.textContent = "⏳ GERANDO VÍDEO..."; }
+  if (status) status.textContent = `Renderizando vídeo vertical de ${seconds} segundos...`;
+  const ctx = canvas.getContext("2d");
+  let startedAt = 0, raf = 0;
+  const draw = (time) => {
+    if (!startedAt) startedAt = time;
+    const elapsed = (time - startedAt) / 1000;
+    desenharArtePromocional(ctx, 0, elapsed, seconds);
+    if (elapsed < seconds) raf = requestAnimationFrame(draw);
+  };
+  recorder.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+  recorder.onerror = () => {
+    if (status) status.textContent = "O navegador encontrou um erro ao gravar o vídeo.";
+  };
+  recorder.onstop = () => {
+    cancelAnimationFrame(raf);
+    stream.getTracks().forEach(t => t.stop());
+    if (chunks.length) {
+      const blob = new Blob(chunks, { type: recorder.mimeType || "video/webm" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "achadinho-da-shoo-video.webm";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+      if (status) status.textContent = "✅ Vídeo gerado! Confira a pasta Downloads do seu celular.";
+    }
+    if (btn) { btn.disabled = false; btn.textContent = "🎬 GERAR E BAIXAR VÍDEO"; }
+  };
+  recorder.start();
+  requestAnimationFrame(draw);
+  setTimeout(() => { if (recorder.state !== "inactive") recorder.stop(); }, seconds * 1000 + 350);
 }
 
 
