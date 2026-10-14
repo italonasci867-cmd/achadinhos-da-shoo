@@ -346,8 +346,8 @@
         <h2>Encontre seu próximo achadinho</h2>
         <p class="muted">Pesquise produtos disponíveis pela integração da Shopee e escolha um para montar seu vídeo vertical.</p>
         <div class="catalog-search">
-          <input id="catalogQuery" placeholder="Ex.: air fryer, fone bluetooth, organizador..." onkeydown="if(event.key==='Enter') pesquisarCatalogo()">
-          <button class="gold" id="catalogSearchBtn" onclick="pesquisarCatalogo()">🔎 Buscar produtos</button>
+          <input id="catalogQuery" placeholder="Ex.: air fryer, fone bluetooth, organizador..." >
+          <button class="gold" id="catalogSearchBtn" type="button">🔎 Buscar produtos</button>
         </div>
         <div id="catalogStatus" class="automation-status">Digite um produto para começar a busca.</div>
       </div>
@@ -377,8 +377,8 @@
             <option value="12" selected>12 segundos</option>
             <option value="15">15 segundos</option>
           </select>
-          <button class="primary" onclick="atualizarPreviewVideo()">✨ Atualizar prévia</button>
-          <button class="gold studio-download" id="downloadVideoBtn" onclick="gerarVideoPromocional()">🎬 GERAR E BAIXAR VÍDEO</button>
+          <button class="primary" type="button">✨ Atualizar prévia</button>
+          <button class="gold studio-download" id="downloadVideoBtn" type="button">🎬 GERAR E BAIXAR VÍDEO</button>
           <p class="muted small-note">Formato vertical para redes sociais. O arquivo será baixado em .webm; a publicação não é enviada automaticamente.</p>
           <div id="videoStatus" class="automation-status">Selecione um produto para preparar a prévia.</div>
         </div>
