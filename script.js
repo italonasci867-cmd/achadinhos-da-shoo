@@ -2221,6 +2221,41 @@ conectarBotoesCatalogoEstudio();
    INICIAR
 ========================= */
 
+/* =========================
+   LIGAÇÃO EXPLÍCITA DOS BOTÕES
+========================= */
+// Expõe as funções para os botões HTML e liga os controles mesmo
+// quando o navegador mantém uma versão antiga da página em cache.
+window.pesquisarCatalogo = pesquisarCatalogo;
+window.abrirLinkCatalogo = abrirLinkCatalogo;
+window.selecionarProdutoCatalogo = selecionarProdutoCatalogo;
+window.atualizarPreviewVideo = atualizarPreviewVideo;
+window.gerarVideoPromocional = gerarVideoPromocional;
+
+const catalogSearchButton = document.getElementById("catalogSearchBtn");
+if (catalogSearchButton) {
+  catalogSearchButton.addEventListener("click", (event) => {
+    event.preventDefault();
+    pesquisarCatalogo();
+  });
+}
+
+const downloadVideoButton = document.getElementById("downloadVideoBtn");
+if (downloadVideoButton) {
+  downloadVideoButton.addEventListener("click", (event) => {
+    event.preventDefault();
+    gerarVideoPromocional();
+  });
+}
+
+const previewVideoButton = document.querySelector("#estudio .studio-controls button.primary");
+if (previewVideoButton) {
+  previewVideoButton.addEventListener("click", (event) => {
+    event.preventDefault();
+    atualizarPreviewVideo();
+  });
+}
+
 carregarConfiguracoes();
 
 render();
