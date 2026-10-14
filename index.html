@@ -20,6 +20,8 @@
     <nav>
       <button class="nav active" data-page="inicio">🏠 Início</button>
       <button class="nav" data-page="ofertas">🔥 Ofertas</button>
+      <button class="nav" data-page="catalogo">🛍️ Catálogo Shopee</button>
+      <button class="nav" data-page="estudio">🎬 Estúdio de vídeos</button>
       <button class="nav" data-page="criar">✍️ Criar divulgação</button>
       <button class="nav" data-page="fila">📤 Fila de publicação</button>
       <button class="nav" data-page="historico">📊 Histórico</button>
@@ -335,6 +337,59 @@
 
     </section>
 
+
+
+    <!-- CATÁLOGO SHOPEE -->
+    <section id="catalogo" class="page">
+      <div class="panel catalog-hero">
+        <span class="eyebrow">ACHADINHOS DA SHOO • DESCOBERTA</span>
+        <h2>Encontre seu próximo achadinho</h2>
+        <p class="muted">Pesquise produtos disponíveis pela integração da Shopee e escolha um para montar seu vídeo vertical.</p>
+        <div class="catalog-search">
+          <input id="catalogQuery" placeholder="Ex.: air fryer, fone bluetooth, organizador..." onkeydown="if(event.key==='Enter') pesquisarCatalogo()">
+          <button class="gold" id="catalogSearchBtn" onclick="pesquisarCatalogo()">🔎 Buscar produtos</button>
+        </div>
+        <div id="catalogStatus" class="automation-status">Digite um produto para começar a busca.</div>
+      </div>
+      <div id="catalogResults" class="catalog-grid">
+        <div class="empty">Os produtos encontrados aparecerão aqui.</div>
+      </div>
+    </section>
+
+    <!-- ESTÚDIO DE VÍDEOS -->
+    <section id="estudio" class="page">
+      <div class="studio-intro">
+        <span class="eyebrow">ESTÚDIO CRIATIVO</span>
+        <h2>Transforme um achadinho em vídeo</h2>
+        <p class="muted">Monte uma peça vertical 9:16 com preço, chamada e link. O vídeo é renderizado no navegador e exportado em WebM.</p>
+      </div>
+      <div class="studio-layout">
+        <div class="panel studio-controls">
+          <h3>Personalize sua divulgação</h3>
+          <div id="studioProductInfo" class="selected-product empty">Escolha um produto no Catálogo Shopee ou use uma oferta já cadastrada.</div>
+          <label for="studioHeadline">Chamada principal</label>
+          <input id="studioHeadline" value="OLHA ESSE ACHADINHO!">
+          <label for="studioSubtitle">Texto de apoio</label>
+          <input id="studioSubtitle" value="Preço bom encontrado na Shopee">
+          <label for="studioDuration">Duração do vídeo</label>
+          <select id="studioDuration">
+            <option value="8">8 segundos</option>
+            <option value="12" selected>12 segundos</option>
+            <option value="15">15 segundos</option>
+          </select>
+          <button class="primary" onclick="atualizarPreviewVideo()">✨ Atualizar prévia</button>
+          <button class="gold studio-download" id="downloadVideoBtn" onclick="gerarVideoPromocional()">🎬 GERAR E BAIXAR VÍDEO</button>
+          <p class="muted small-note">Formato vertical para redes sociais. O arquivo será baixado em .webm; a publicação não é enviada automaticamente.</p>
+          <div id="videoStatus" class="automation-status">Selecione um produto para preparar a prévia.</div>
+        </div>
+        <div class="panel studio-preview-panel">
+          <div class="preview-heading"><span>PRÉVIA VERTICAL</span><span class="format-pill">9:16 • MOBILE</span></div>
+          <div class="video-frame">
+            <canvas id="promoCanvas" width="360" height="640" aria-label="Prévia do vídeo promocional"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- CONFIGURAÇÕES -->
 
